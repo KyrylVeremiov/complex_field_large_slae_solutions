@@ -1,8 +1,11 @@
+#%%
 import sys
 import petsc4py
 from petsc4py import PETSc
 import numpy as np
+import time
 
+#%%
 def get_random_matrix(n: int, seed: int = 10):
     np.random.seed(seed=seed)
     # PETSc is extensively programmable using the `PETSc.Options` database. For
@@ -79,13 +82,94 @@ def get_random_matrix(n: int, seed: int = 10):
 
 def get_random_b(b: PETSc.Vec , seed: int = 10):
     np.random.seed(seed=seed)
-    rstart, rend = A.getOwnershipRange()
+    rstart, rend = b.getOwnershipRange()
     for row in range(rstart, rend):
         b[row]=np.random.rand()*10+0.1
 
 
-N=100#matrix size
+def test_random_slae_solution(ns, seed, params):
+    # The full PETSc4py API is to be found in the `petsc4py.PETSc` module.
+    np.random.seed(seed=seed)
+    results = {}
+    for n in ns:
+        results[n]=[]
+        A = get_random_matrix(n, SEED)
+        x, b = A.createVecs()
+        # x.view()
+        # b.view()
+        get_random_b(b, SEED)
+
+        for param in params:
+            # PETSc represents all linear solvers as preconditioned Krylov subspace methods
+            # of type `PETSc.KSP`. Here we create a KSP object for a conjugate gradient
+            # solver preconditioned with an algebraic multigrid method.
+            ksp = PETSc.KSP()
+            ksp.create(comm=A.getComm())
+
+            # We set the matrix in our linear solver and allow the user to program the
+            # solver with options.
+            ksp.setOperators(A)
+            ksp.setFromOptions()
+
+            # Since the matrix knows its size and parallel distribution, we can retrieve
+            # appropriately-scaled vectors using `Mat.createVecs`. PETSc vectors are
+            # objects of type `PETSc.Vec`. Here we set the right-hand side of our system to
+            # a vector of ones, and then solve.
+
+            ksp.setType(param["method"])
+            # ksp.setType(PETSc.KSP.Type.GMRES)
+            # ksp.getPC().setType(PETSc.PC.Type.LU)
+            ksp.getPC().setType(param["preconditioner"])
+
+            # ksp.logConvergenceHistory(ksp.getResidualNorm())
+            start_time = time.time()
+            ksp.solve(b, x)
+            end_time = time.time()
+            results[n].append({"KSP":ksp,"time":end_time-start_time})
+
+    return results
+
+    # Finally, allow the user to print the solution by passing ``-view_sol`` to the script.
+
+    # x.viewFromOptions('-view_sol')
+    # x.view()
+
+    # y = A.createVecLeft()
+    # A.mult(x, y)
+    # y.view()
+    # b.view()
+    # ksp.
+    # print("Residual= ", (y - b).sum())
+    # ksp.buildResidual().view()
+    # ksp.logConvergenceHistory(ksp.getResidualNorm())
+    # ksp.monitor()
+    # PETSc.Log.begin()
+    # return PETSc.Log.getTime()
+    # return PETSc.Log.getCPUTime()
+    # return PETSc.Log.getFlops()
+
+    # return PETSc.Log.isActive()
+    # return ksp.getConvergenceHistory()
+    # Things to try
+    # -------------
+    #)
+    # - Show the solution with ``-view_sol``.
+    # - Show the matrix with ``-view_mat``.
+    # - Change the resolution with ``-n``.
+    # - Use a direct solver by passing ``-ksp_type preonly -pc_type lu``.
+    # - Run in parallel on two processors using:
+    #
+    #   .. code-block:: console
+    #
+    #       mpiexec -n 2 python poisson2d.py
+
+
+#%%
+N=[10,100,1000]#matrix size
 SEED=10
+PARAMS= [{"method":PETSc.KSP.Type.GMRES,"preconditioner":PETSc.PC.Type.ILU},
+         {"method": PETSc.KSP.Type.BCGS, "preconditioner": PETSc.PC.Type.ILU},
+                   ]
 # This demo is structured as a script to be executed using:
 #   $ python poisson2d.py
 #
@@ -95,57 +179,18 @@ SEED=10
 # command-line arguments to the script are passed through to PETSc.
 petsc4py.init(sys.argv)
 
-# The full PETSc4py API is to be found in the `petsc4py.PETSc` module.
+results=test_random_slae_solution(ns=N,seed=SEED,params= PARAMS)
 
-A=get_random_matrix(N,SEED)
+# print(results)
+for n in results:
+    print("n=",n)
+    for param in results[n]:
+        # param["KSP"].getType().view()
+        ksp=param["KSP"]
+        print("method=",ksp.getType(),", preconditioner=", ksp.getPC().type,", time=", param["time"],
+              " seconds, residual norm=",  ksp.getResidualNorm(),  ksp.its, ksp.history)
+        # param["KSP"].getSolution().view()
 
-# PETSc represents all linear solvers as preconditioned Krylov subspace methods
-# of type `PETSc.KSP`. Here we create a KSP object for a conjugate gradient
-# solver preconditioned with an algebraic multigrid method.
-ksp = PETSc.KSP()
-ksp.create(comm=A.getComm())
-ksp.setType(PETSc.KSP.Type.BCGS)
-# ksp.setType(PETSc.KSP.Type.GMRES)
-ksp.getPC().setType(PETSc.PC.Type.LU)
-
-# We set the matrix in our linear solver and allow the user to program the
-# solver with options.
-
-ksp.setOperators(A)
-ksp.setFromOptions()
-
-# Since the matrix knows its size and parallel distribution, we can retrieve
-# appropriately-scaled vectors using `Mat.createVecs`. PETSc vectors are
-# objects of type `PETSc.Vec`. Here we set the right-hand side of our system to
-# a vector of ones, and then solve.
-
-x, b = A.createVecs()
-# x.view()
-# b.view()
-get_random_b(b,SEED)
-ksp.solve(b, x)
-
-
-# Finally, allow the user to print the solution by passing ``-view_sol`` to the script.
-
-x.viewFromOptions('-view_sol')
-# x.view()
-
-y=A.createVecLeft()
-A.mult(x,y)
-# y.view()
-# b.view()
-
-print("Residual= ", (y-b).sum())
-# Things to try
-# -------------
-#
-# - Show the solution with ``-view_sol``.
-# - Show the matrix with ``-view_mat``.
-# - Change the resolution with ``-n``.
-# - Use a direct solver by passing ``-ksp_type preonly -pc_type lu``.
-# - Run in parallel on two processors using:
-#
-#   .. code-block:: console
-#
-#       mpiexec -n 2 python poisson2d.py
+# setConvergenceHistory
+# setErrorIfNotConverged
+# setInitialGuessKnoll
