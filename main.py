@@ -8,14 +8,20 @@
 # from petsc4py.typing import KSPMonitorFunction
 
 
+# download from https://gitlab.com/petsc/petsc
+# Configurate for complex numbers https://abhigupta.io/2021/12/08/installing-petsc-complex.html
 
+# https://www.pism.io/docs/installation/petsc.html
 
+# conda create -n env3-10-complex -c conda-forge python=3.10 fenics-dolfinx 'petsc=*=complex*' mpich
+# conda env export
 #%%
 import os
 import json
 from datetime import datetime
 
 N=[10,100,1000,3000,5000]#matrix size
+
 SEED=10
 PARAMS= [
         {"method":"CG","preconditioner":"GAMG"},

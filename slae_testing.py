@@ -9,8 +9,13 @@ def run_test(n,seed,parameters):
     # print(file_name)
     with (open(file_name+".txt", 'w') as f, redirect_stdout(f)):
         import petsc4py
-        from petsc4py import PETSc
+        # petsc4py.init(arch="complex")
         petsc4py.init()
+
+        # petsc4py.init(arch="linux-gnu-complex-64")
+        from petsc4py import PETSc
+        # petsc4py.init(arch="linux-gnu-complex-64")
+        # petsc4py.init(arch="/usr/lib/petscdir/petsc3.10/x86_64-linux-gnu-complex/")
 
         def get_random_matrix(n: int, seed: int = 10):
             np.random.seed(seed=seed)
@@ -84,7 +89,7 @@ def run_test(n,seed,parameters):
             rstart, rend = A.getOwnershipRange()
             for row in range(rstart, rend):
                 for col in range(rstart, rend):
-                    A[row, col] = np.random.rand() * 10 + 0.1
+                    A[row, col] = np.random.rand() * 10 + 0.1+ np.random.rand() * 10j
 
             # At this stage, any exchange of information required in the matrix assembly
             # process has not occurred. We achieve this by calling `Mat.assemblyBegin` and
@@ -107,7 +112,7 @@ def run_test(n,seed,parameters):
             np.random.seed(seed=seed)
             rstart, rend = b.getOwnershipRange()
             for row in range(rstart, rend):
-                b[row] = np.random.rand() * 10 + 0.1
+                b[row] = np.random.rand() * 10 + 0.1+  np.random.rand() * 10j
             b.assemblyBegin()
             b.assemblyEnd()
             return b
@@ -183,8 +188,8 @@ def run_test(n,seed,parameters):
                     # L.deactivate()
                     # L.pop()
                     # L.view()
-
             return results
+
 
         # Finally, allow the user to print the solution by passing ``-view_sol`` to the script.
 
@@ -211,7 +216,8 @@ def run_test(n,seed,parameters):
         # -------------
         # )
         # - Show the solution with ``-view_sol``.
-        # - Show the matrix with ``-view_mat``.
+        # - Show the matrix with ``-view_mat``u
+
         # - Change the resolution with ``-n``.
         # - Use a direct solver by passing ``-ksp_type preonly -pc_type lu``.
         # - Run in parallel on two processors using:
@@ -233,6 +239,8 @@ def run_test(n,seed,parameters):
             for param in results[n]:
                 # param["KSP"].getType().view()
                 ksp=param["KSP"]
+                # param["KSP"].getSolution().view()
+
                 print(f'method={ksp.getType()}\npreconditioner={ksp.getPC().type}\ntime={param["time"]}seconds\n'
                       f'residual norm={ksp.getResidualNorm()}\nnumber of iterations={ksp.its}\n')
                 print("\n\n\n\n")
