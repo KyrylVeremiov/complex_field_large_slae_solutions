@@ -19,14 +19,21 @@
 import os
 import json
 from datetime import datetime
+from constants import SEED
 
-N=[10,100,1000,3000,5000]#matrix size
+# N=[10,100,500]#matrix size
+N=[10,100.250,500,1000,2000,3000,5000]#matrix size
 
-SEED=10
+# https://petsc.org/release/overview/linear_solve_table/
+# RESIDUAL_NORM_TRESHOLD=1e-2
 PARAMS= [
-        {"method":"CG","preconditioner":"GAMG"},
+        # {"method":"CG","preconditioner":"GAMG"},
+        {"method":"BCGS","preconditioner":"GAMG"},
+        {"method":"GMRES","preconditioner":"GAMG"},
         {"method":"GMRES","preconditioner":"ILU"},
-        {"method": "BCGS", "preconditioner": "ILU"}
+        {"method": "BCGS", "preconditioner": "ILU"},
+        {"method":"GMRES","preconditioner":"NONE"},
+        {"method":"BCGS","preconditioner":"NONE"},
          ]
 for n in N:
     for param in PARAMS:

@@ -3,6 +3,7 @@ import sys
 from contextlib import redirect_stdout
 import numpy as np
 import time
+from main import RESIDUAL_NORM_TRESHOLD
 
 def run_test(n,seed,parameters):
     file_name=f"./results/n{n}_s{seed}_met{parameters['method']}_prec{parameters['preconditioner']}"
@@ -82,9 +83,6 @@ def run_test(n,seed,parameters):
             # Python syntax. `Mat.getOwnershipRange` is used to retrieve the range of rows
             # local to this processor.
 
-            def index_to_grid(r):
-                """Convert a row number into a grid point."""
-                return (r // n, r % n)
 
             rstart, rend = A.getOwnershipRange()
             for row in range(rstart, rend):
@@ -104,6 +102,7 @@ def run_test(n,seed,parameters):
             # A.viewFromOptions('-view_mat')
 
             # A.view()
+            A.convert(PETSc.Mat.Type.SEQAIJ)
 
             return A
 
@@ -164,8 +163,9 @@ def run_test(n,seed,parameters):
                     ksp.setType(param["method"])
                     # ksp.setType(PETSc.KSP.Type.GMRES)
                     # ksp.getPC().setType(PETSc.PC.Type.LU)
-                    # ksp.getPC().setType(param["preconditioner"])
                     ksp.getPC().setType(param["preconditioner"])
+                    # ksp.setTolerances(rtol=1e-16,atol=RESIDUAL_NORM_TRESHOLD,divtol=1e9,max_it=5e3)
+                    # ksp.getPC().setFactorLevels(1)
 
                     # PETSc.Log.begin()
                     # start_time = time.time()
@@ -235,15 +235,29 @@ def run_test(n,seed,parameters):
         results=test_random_slae_solution([n],seed,[PARAM])
         # print(results)
         for n in results:
-            print("n=",n)
+            print(f"n={n}")
             for param in results[n]:
                 # param["KSP"].getType().view()
                 ksp=param["KSP"]
                 # param["KSP"].getSolution().view()
 
-                print(f'method={ksp.getType()}\npreconditioner={ksp.getPC().type}\ntime={param["time"]}seconds\n'
+                print(f'method={ksp.getType()}\npreconditioner={ksp.getPC().type}\ntime={param["time"]} seconds\n'
                       f'residual norm={ksp.getResidualNorm()}\nnumber of iterations={ksp.its}\n')
+                A=ksp.getOperators()[0]
+                x=ksp.getSolution()
+                b=ksp.getRhs()
+                y = A.createVecLeft()
+                A.mult(x, y)
+                # A.view()
+                # x.view()
+                # y.view()
+                # b.view()
+                print("Residual norm= ", np.sqrt(((y - b)*(y - b)).sum()))
+                r_c=y-b
+                r_c.conjugate()
+                print("Residual norm= ", np.sqrt(((y - b)*r_c).sum()))
                 print("\n\n\n\n")
+
                       # ksp.history, ksp.getMonitor())
         PETSc.Log.view()
 
