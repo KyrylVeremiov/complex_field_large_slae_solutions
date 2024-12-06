@@ -83,25 +83,30 @@ def get_title(prop):
         title = "residual norm"
     return title
 
-def draw_results_changing_n(plot_data, logscale=True):
+def draw_results_changing_n(plot_data, logscale=True,treshold=True):
     for prop in ["time","num_of_iterations","residual_norm"]:
         title=get_title(prop)
+        max_n=0
         for item in plot_data:
             data = item["data"]
-            if logscale:
-                plt.yscale("log")
             tmp_dict={el["n"]:el[prop] for el in data}
             tmp_list=sorted(tmp_dict.items())
             x, y = zip(*tmp_list)
             # TO NOT SHOW ONE-POINT RESULTS
             # if len(x)>1:
-                # plt.plot(x,y, label=item["method"]+" with "+item["preconditioner"] +" preconditioner")
+            # plt.plot(x,y, label=item["method"]+" with "+item["preconditioner"] +" preconditioner")
             plt.plot(x,y, label=item["method"]+" with "+item["preconditioner"])
-            plt.legend(fontsize="10")
             # plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
+            max_n=max(max_n,max(list(tmp_dict.keys())))
+            print(list(tmp_dict.keys()))
+        if treshold and prop == "residual_norm":
+            plt.plot([0,max_n],[RESIDUAL_NORM_TRESHOLD,RESIDUAL_NORM_TRESHOLD],"red",label="Treshold")
+        if logscale:
+            plt.yscale("log")
         plt.title(f"Dependence of {title} on matrix size")
         plt.xlabel("n")
         plt.ylabel(title)
+        plt.legend(fontsize="10")
         plt.savefig(DIRECTORY_TO_SAVE+"/"+title)
         plt.show()
 
@@ -123,7 +128,7 @@ def draw_results_static_n(plot_data, logscale_time=True,logscale_residual=True,t
             plt.xscale("log")
         if logscale_residual:
             plt.yscale("log")
-        print(max_time)
+        # print(max_time)
         if treshold:
             plt.plot([0,max_time],[RESIDUAL_NORM_TRESHOLD,RESIDUAL_NORM_TRESHOLD],"red",label="Treshold")
         plt.legend(fontsize="10")
@@ -162,7 +167,7 @@ def main():
         results=get_results()
         if FILTER_NOT_CONVERGENCE:
             results=filter_non_convergence(results)
-        draw_results_changing_n(results, logscale=True)
+        draw_results_changing_n(results, logscale=True,treshold=True)
         draw_results_static_n(results,logscale_time=False,logscale_residual=True,treshold=True)
         print(f"{'With' if FILTER_NOT_CONVERGENCE else 'Without'} filtering out non-convergence results")
         print_results(results)

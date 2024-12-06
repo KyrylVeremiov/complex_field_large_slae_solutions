@@ -3,7 +3,7 @@ import sys
 from contextlib import redirect_stdout
 import numpy as np
 import time
-from main import RESIDUAL_NORM_TRESHOLD
+from constants import RESIDUAL_NORM_TRESHOLD
 
 def run_test(n,seed,parameters):
     file_name=f"./results/n{n}_s{seed}_met{parameters['method']}_prec{parameters['preconditioner']}"
