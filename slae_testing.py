@@ -10,7 +10,9 @@ import matplotlib
 import numpy as np
 import time
 import os
-from constants import RESIDUAL_NORM_TRESHOLD, RESULTS_DIRECTORY, DATA_DIRECTORY, DISPLAY_DIRECTORY
+
+from analyse import check_directory
+from constants import RESIDUAL_NORM_TRESHOLD, RESULTS_DIRECTORY, DATA_DIRECTORY, ANALYSE_DIRECTORY
 
 
 def run_test(n, seed, parameters, mat_test_type):
@@ -359,7 +361,9 @@ def plot_portrait_matrix(A, n, mat_test_type,norm="NoNorm"):
     # ax.pcolormesh(A_plot)
     plt.title(title, fontsize="9")
 
-    filename_to_save_plot= DISPLAY_DIRECTORY + "/" + name + f"_matrix_n_{n}"
+    directory_to_save=ANALYSE_DIRECTORY + "/" + mat_test_type + "_matrix/"
+    check_directory(directory_to_save)
+    filename_to_save_plot= directory_to_save + name + f"_matrix_n_{n}"
     plt.savefig(filename_to_save_plot)
     # plt.show()
 
