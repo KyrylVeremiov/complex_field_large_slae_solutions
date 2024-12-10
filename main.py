@@ -18,29 +18,68 @@
 #%%
 import os
 import json
+from crypt import methods
 from datetime import datetime
-from constants import SEED
 
-# N=[10,100,500]#matrix size
-N=[10,100.250,500,1000,2000,3000,5000]#matrix size
+from constants import SEED
+import display_results
+import petsc4py
+petsc4py.init()
+from petsc4py import PETSc
+N=[10]#matrix size
+# N=[10,100,250,500,1000,2000,3000,5000]#matrix size
 
 # https://petsc.org/release/overview/linear_solve_table/
-# RESIDUAL_NORM_TRESHOLD=1e-2
+#FOR INDIVIDUAL METHOD TEST
 PARAMS= [
     {"method":"BCGS","preconditioner":"GAMG"},
+    # {"method":"RICHARDSON","preconditioner":"NONE"},
+    # {"method":"RICHARDSON","preconditioner":"GAMG"},
     {"method":"GMRES","preconditioner":"GAMG"},
     {"method":"GMRES","preconditioner":"ILU"},
-    {"method": "BCGS", "preconditioner": "ILU"},
-    {"method":"GMRES","preconditioner":"NONE"},
-    {"method":"BCGS","preconditioner":"NONE"},
+    # {"method": "BCGS", "preconditioner": "ILU"},
+    # {"method":"GMRES","preconditioner":"NONE"},
+    # {"method":"BCGS","preconditioner":"NONE"},
     # {"method":"CG","preconditioner":"GAMG"}
 ]
-for n in N:
-    for param in PARAMS:
-        print(param,f"of size n={n} begins at {datetime.now()}")
-        os.system(f"python slae_testing.py '{json.dumps(n)}' '{json.dumps(SEED)}' '{json.dumps(param)}'")
 
+
+########################3#FOR TESTING WITH ALL PRECONDITIONERS
+preconditioners=[el for el in PETSc.PC.Type.__dict__.keys() if el[:1] != '_']
+methods=[
+    "GMRES",
+    "BCGS",
+    "RICHARDSON"
+]
+PARAMS=[{"method":met,"preconditioner":prec} for met in methods for prec in preconditioners]
+
+
+# Number is ID in the SuiteSparse Matrix Collection
+# see https://github.com/drdarshan/ssgetpy?tab=readme-ov-file
+# and https://sparse.tamu.edu/
+test_matrix_types= [
+    # 2,
+    # 1054,
+    "random",
+    # "hilbert"
+]
+
+# test_matrix_type="random"
+
+# test_matrix_type="hilbert"
+
+
+for test_matrix_type in test_matrix_types:
+    for param in PARAMS:
+        for n in N:
+            print(param,f"{f'on suite sparse matrix with id {test_matrix_type}' if type(test_matrix_type)==int else f' on matrix of size n={n}'} begins at {datetime.now()}")
+            os.system(f"python slae_testing.py '{json.dumps(n)}' '{json.dumps(SEED)}' '{json.dumps(param)}' '{json.dumps(test_matrix_type)}'")
+            if type(test_matrix_type)==int:
+                break
 # mpiexec -n 2 python main.py
+
+display_results.main()
+print("Successfully displayed")
 
 # PARAMS= [{"method":PETSc.KSP.Type.GMRES,"preconditioner": PETSc.PC.Type.ILU},
 # {"method": PETSc.KSP.Type.BCGS, "preconditioner": PETSc.PC.Type.ILU},

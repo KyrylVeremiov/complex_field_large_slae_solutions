@@ -1,12 +1,20 @@
 import json
 import sys
+import scipy as sp
 from contextlib import redirect_stdout
+
+from ssgetpy import search, fetch
+
+import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 import time
-from constants import RESIDUAL_NORM_TRESHOLD
+import os
+from constants import RESIDUAL_NORM_TRESHOLD, RESULTS_DIRECTORY, DATA_DIRECTORY, DISPLAY_DIRECTORY
 
-def run_test(n,seed,parameters):
-    file_name=f"./results/n{n}_s{seed}_met{parameters['method']}_prec{parameters['preconditioner']}"
+
+def run_test(n, seed, parameters, mat_test_type):
+    file_name=f"./results/n{n}_s{seed}_met{parameters['method']}_pc{parameters['preconditioner']}_mat_{mat_test_type}"
     # print(file_name)
     with (open(file_name+".txt", 'w') as f, redirect_stdout(f)):
         import petsc4py
@@ -17,6 +25,16 @@ def run_test(n,seed,parameters):
         from petsc4py import PETSc
         # petsc4py.init(arch="linux-gnu-complex-64")
         # petsc4py.init(arch="/usr/lib/petscdir/petsc3.10/x86_64-linux-gnu-complex/")
+
+        def get_random_b(b: PETSc.Vec, seed: int = 10):
+            np.random.seed(seed=seed)
+            rstart, rend = b.getOwnershipRange()
+            for row in range(rstart, rend):
+                b[row] = np.random.rand() * 10 + 0.1+  np.random.rand() * 10j
+            b.assemblyBegin()
+            b.assemblyEnd()
+            return b
+
 
         def get_random_matrix(n: int, seed: int = 10):
             np.random.seed(seed=seed)
@@ -103,34 +121,82 @@ def run_test(n,seed,parameters):
 
             # A.view()
             A.convert(PETSc.Mat.Type.SEQAIJ)
+            return (A,"random")
 
-            return A
+        def get_special_matrix(mat_type):
+            if mat_type=="hilbert":
+                # A_numpy =np.array(sp.linalg.hilbert(n) , dtype=np.int32)+0j
+                A_numpy =sp.linalg.hilbert(n).astype(np.float64)
+            A = PETSc.Mat().create()
+            A.setSizes([n, n])
+            # A.setType("aij")
+            A.setUp()
+
+            # First arg is list of row indices, second list of column indices
+            # A.setValues([1, 2, 3], [0, 5, 9], np.ones((3, 3)))
+            # A.setValues(np.arange(n), np.arange(n), A_numpy)
+            A.setValues(np.arange(n).astype(np.int32), np.arange(n).astype(np.int32), A_numpy)
+            A.assemble()
+            # print(sp.linalg.hilbert(n))
+            return (A,mat_type)
+
+        def get_suite_sparse_matrix(mat_type):
+
+            A_mm=fetch(mat_type)[0]
+            data_dir =A_mm.download(destpath=DATA_DIRECTORY, extract=True)[0]
+
+            # print(data_dir+"/"+os.listdir(data_dir)[0])
+            # print(A_path[0])
+            A_mat=sp.io.mmread(data_dir+"/"+os.listdir(data_dir)[0]).toarray()
+
+            A_mm_tuple=A_mm.to_tuple()
+            # if mat_type=="hilbert":
+            #     # A_numpy =np.array(sp.linalg.hilbert(n) , dtype=np.int32)+0j
+            #     A_numpy =sp.linalg.hilbert(n).astype(np.float64)
+            A = PETSc.Mat().create()
+            A_mat.shape[0]
+            A.setSizes([A_mat.shape[0], A_mat.shape[1]])
+            # A.setType("aij")
+            A.setUp()
+            # print(A_mat.shape[0])
+
+            # First arg is list of row indices, second list of column indices
+            # A.setValues([1, 2, 3], [0, 5, 9], np.ones((3, 3)))
+            # A.setValues(np.arange(n), np.arange(n), A_numpy)
+            A.setValues(np.arange(A_mat.shape[0]).astype(np.int32), np.arange(A_mat.shape[1]).astype(np.int32), A_mat)
+            A.assemble()
+            # print(sp.linalg.hilbert(n))
+
+            return (A,A_mm_tuple[11]+"_"+A_mm_tuple[1]+"_"+A_mm_tuple[2])
 
 
-        def get_random_b(b: PETSc.Vec, seed: int = 10):
-            np.random.seed(seed=seed)
-            rstart, rend = b.getOwnershipRange()
-            for row in range(rstart, rend):
-                b[row] = np.random.rand() * 10 + 0.1+  np.random.rand() * 10j
-            b.assemblyBegin()
-            b.assemblyEnd()
-            return b
-
-
-        def test_random_slae_solution(ns, seed, params):
+        def test_slae_solution(ns, seed, alg_params):
             # The full PETSc4py API is to be found in the `petsc4py.PETSc` module.
 
             np.random.seed(seed=seed)
             results = {}
             for n in ns:
+                if mat_test_type== "random":
+                    A,mat_test_name = get_random_matrix(n, seed)
+                elif mat_test_type== "hilbert":
+                    A,mat_test_name=get_special_matrix(mat_type=mat_test_type)
+                elif type(mat_test_type)==int:
+                    A,mat_test_name=get_suite_sparse_matrix(mat_type=mat_test_type)
+                    n=A.size[0]
+                else:
+                    raise Exception("UNKNOWN TYPE OF TEST MATRIX")
+
+                # print(type(mat_test_type))
                 results[n] = []
-                A = get_random_matrix(n, seed)
+
+                # plot_portrait_matrix(A=A, n=n, mat_test_type=mat_test_name, norm="LogNorm")
+
                 x, b = A.createVecs()
                 # x.view()
                 # b.view()
                 b=get_random_b(b, seed)
 
-                for param in params:
+                for param in alg_params:
                     # PETSc represents all linear solvers as preconditioned Krylov subspace methods
                     # of type `PETSc.KSP`. Here we create a KSP object for a conjugate gradient
                     # solver preconditioned with an algebraic multigrid method.
@@ -164,7 +230,8 @@ def run_test(n,seed,parameters):
                     # ksp.setType(PETSc.KSP.Type.GMRES)
                     # ksp.getPC().setType(PETSc.PC.Type.LU)
                     ksp.getPC().setType(param["preconditioner"])
-                    # ksp.setTolerances(rtol=1e-16,atol=RESIDUAL_NORM_TRESHOLD,divtol=1e9,max_it=5e3)
+
+                    # ksp.setTolerances(rtol=RTOL,atol=RESIDUAL_NORM_TRESHOLD,divtol=DIVTOL,max_it=MAXIT)
                     # ksp.getPC().setFactorLevels(1)
 
                     # PETSc.Log.begin()
@@ -176,7 +243,7 @@ def run_test(n,seed,parameters):
                     start_time = time.time()
                     ksp.solve(b, x)
                     end_time = time.time()
-                    results[n].append({"KSP": ksp, "time": end_time - start_time})
+                    results[n].append({"KSP": ksp, "time": end_time - start_time,"mat_name":mat_test_name})
 
 
                     # PETSc.LogEvent.end(1)
@@ -231,8 +298,7 @@ def run_test(n,seed,parameters):
                 PARAM[arg]=eval("PETSc.KSP.Type."+parameters[arg])
             if arg=="preconditioner":
                 PARAM[arg]=eval("PETSc.PC.Type."+parameters[arg])
-
-        results=test_random_slae_solution([n],seed,[PARAM])
+        results=test_slae_solution([n],seed,[PARAM])
         # print(results)
         for n in results:
             print(f"n={n}")
@@ -241,7 +307,8 @@ def run_test(n,seed,parameters):
                 ksp=param["KSP"]
                 # param["KSP"].getSolution().view()
 
-                print(f'method={ksp.getType()}\npreconditioner={ksp.getPC().type}\ntime={param["time"]} seconds\n'
+                print(f'matrix type={param["mat_name"]}\n'
+                      f'method={ksp.getType()}\npreconditioner={ksp.getPC().type}\ntime={param["time"]} seconds\n'
                       f'residual norm={ksp.getResidualNorm()}\nnumber of iterations={ksp.its}\n')
                 A=ksp.getOperators()[0]
                 x=ksp.getSolution()
@@ -257,23 +324,61 @@ def run_test(n,seed,parameters):
                 r_c.conjugate()
                 print("Residual norm= ", np.sqrt(((y - b)*r_c).sum()))
                 print("\n\n\n\n")
+                plot_portrait_matrix(A=A, n=n, mat_test_type=param["mat_name"], norm="LogNorm")
+                # PETSc.MatView(A)
+                # PETSc.Viewer.createDraw(A)
+                # A.assemble()
+                # A.view()
 
-                      # ksp.history, ksp.getMonitor())
+
+                # ksp.history, ksp.getMonitor())
         PETSc.Log.view()
 
                 # param["KSP"].getSolution().view()
+def plot_portrait_matrix(A, n, mat_test_type,norm="NoNorm"):
+    fig, ax = plt.subplots()
+    name=mat_test_type
+
+    A_plot=abs(A.getValues(range(0, A.getSize()[0]), range(0, A.getSize()[1])))
+    title =name + "\nmatrix"+f" n={n} absolute values"
+    # ax.title=title
+    # mp=plt.cm.ScalarMappable()
+    # mp.set_array(A_plot)
+    # fig.colorbar(mappable=plt.cm.ScalarMappable(norm=matplotlib.colors.LogNorm()), ax=ax)
+    vmin=A_plot.min()
+    if norm== "LogNorm":
+        if vmin == 0:
+            A_plot+=0.001
+        norm = matplotlib.colors.LogNorm(vmin=float(A_plot.min()),vmax=float(A_plot.max()))
+    elif norm=="NoNorm":
+        norm=matplotlib.colors.Normalize(vmin=vmin,vmax=A_plot.max())
+    fig.colorbar(mappable=plt.cm.ScalarMappable(norm=norm), ax=ax)
+    # fig.colorbar(mappable=plt.cm.ScalarMappable(), ax=ax)
+    # , norm = LogNorm(vmin=0.01, vmax=1)
+    ax.matshow(A_plot, norm=norm)
+    # ax.pcolormesh(A_plot)
+    plt.title(title, fontsize="9")
+
+    filename_to_save_plot= DISPLAY_DIRECTORY + "/" + name + f"_matrix_n_{n}"
+    plt.savefig(filename_to_save_plot)
+    # plt.show()
 
 def main():
     try:
         n= json.loads(sys.argv[1])
         seed= json.loads(sys.argv[2])
         param= json.loads(sys.argv[3])
+        test_type =  json.loads(sys.argv[4])
+        # print(type(test_type))
+        # if test_type.isdigit():
+        #     test_type=int(test_type)
     except:
         print("Incorrect arguments")
 
     # try:
     # print(f"n={n}, seed={seed}, Parameters={param}")
-    run_test(n,seed, param)
+    run_test(n, seed, param, mat_test_type=test_type)
+
     # except:
     #     print("Error")
 

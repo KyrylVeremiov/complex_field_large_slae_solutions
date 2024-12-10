@@ -1,56 +1,159 @@
-[500, 200, 100, 10, 3000, 1000]
-[200, 100, 500, 1000, 10]
-[1000, 100, 200, 500, 10]
-[100, 1000, 10, 500, 200]
-[200, 10, 100, 1000, 500]
-[200, 500, 100, 10, 1000]
-[500, 200, 100, 10, 3000, 1000]
-[200, 100, 500, 1000, 10]
-[1000, 100, 200, 500, 10]
-[100, 1000, 10, 500, 200]
-[200, 10, 100, 1000, 500]
-[200, 500, 100, 10, 1000]
-[500, 200, 100, 10, 3000, 1000]
-[200, 100, 500, 1000, 10]
-[1000, 100, 200, 500, 10]
-[100, 1000, 10, 500, 200]
-[200, 10, 100, 1000, 500]
-[200, 500, 100, 10, 1000]
-Without filtering out non-convergence results
-bcgs with gamg
-{'n': 500, 'time': 46.47757053375244, 'residual_norm': 2.38601552975001, 'num_of_iterations': 5000}
-{'n': 200, 'time': 13.234964609146118, 'residual_norm': 2.8549115904209024, 'num_of_iterations': 5000}
-{'n': 100, 'time': 0.47208285331726074, 'residual_norm': 9.52745958364569e-05, 'num_of_iterations': 1372}
-{'n': 10, 'time': 0.0010991096496582031, 'residual_norm': 8.770840406647568e-08, 'num_of_iterations': 11}
-{'n': 3000, 'time': 2352.0296790599823, 'residual_norm': 1.4420146924301038, 'num_of_iterations': 5000}
-{'n': 1000, 'time': 240.50743222236633, 'residual_norm': 10.922035034510742, 'num_of_iterations': 5000}
-bcgs with ilu
-{'n': 200, 'time': 0.0014820098876953125, 'residual_norm': 9.28303582937036e-25, 'num_of_iterations': 1}
-{'n': 100, 'time': 0.0002579689025878906, 'residual_norm': 1.219594614488444e-26, 'num_of_iterations': 1}
-{'n': 500, 'time': 0.012117624282836914, 'residual_norm': 3.416108942916436e-23, 'num_of_iterations': 1}
-{'n': 1000, 'time': 0.02808213233947754, 'residual_norm': 1.760059554661199e-20, 'num_of_iterations': 1}
-{'n': 10, 'time': 4.863739013671875e-05, 'residual_norm': 4.735266154712796e-29, 'num_of_iterations': 1}
-bcgs with none
-{'n': 1000, 'time': 74.99856948852539, 'residual_norm': 18461.604092713053, 'num_of_iterations': 5000}
-{'n': 100, 'time': 0.11899566650390625, 'residual_norm': 4.8255725380075076e-05, 'num_of_iterations': 1589}
-{'n': 200, 'time': 2.645495653152466, 'residual_norm': 424.5088040888431, 'num_of_iterations': 5000}
-{'n': 500, 'time': 12.74244499206543, 'residual_norm': 961.053380089434, 'num_of_iterations': 5000}
-{'n': 10, 'time': 8.296966552734375e-05, 'residual_norm': 9.943845701939124e-05, 'num_of_iterations': 11}
-gmres with gamg
-{'n': 100, 'time': 0.9460031986236572, 'residual_norm': 0.09745929732458058, 'num_of_iterations': 5000}
-{'n': 1000, 'time': 256.9525535106659, 'residual_norm': 0.2197957840969405, 'num_of_iterations': 5000}
-{'n': 10, 'time': 0.0003571510314941406, 'residual_norm': 7.06087957252022e-15, 'num_of_iterations': 10}
-{'n': 500, 'time': 60.1157865524292, 'residual_norm': 0.2983944883369576, 'num_of_iterations': 5000}
-{'n': 200, 'time': 6.977215528488159, 'residual_norm': 0.3336511127817536, 'num_of_iterations': 5000}
-gmres with ilu
-{'n': 200, 'time': 0.0009174346923828125, 'residual_norm': 1.9869057193568095e-12, 'num_of_iterations': 1}
-{'n': 10, 'time': 7.939338684082031e-05, 'residual_norm': 9.036727929578645e-15, 'num_of_iterations': 1}
-{'n': 100, 'time': 0.00017380714416503906, 'residual_norm': 3.3416477599714396e-13, 'num_of_iterations': 1}
-{'n': 1000, 'time': 0.017518043518066406, 'residual_norm': 6.550092368320274e-10, 'num_of_iterations': 1}
-{'n': 500, 'time': 0.009494304656982422, 'residual_norm': 2.882756036352506e-11, 'num_of_iterations': 1}
-gmres with none
-{'n': 200, 'time': 1.506047010421753, 'residual_norm': 51.46050532846735, 'num_of_iterations': 5000}
-{'n': 500, 'time': 16.60062575340271, 'residual_norm': 89.08847304667322, 'num_of_iterations': 5000}
-{'n': 100, 'time': 0.2117304801940918, 'residual_norm': 29.53634256807012, 'num_of_iterations': 5000}
-{'n': 10, 'time': 0.000152587890625, 'residual_norm': 1.6976779072924107e-14, 'num_of_iterations': 10}
-{'n': 1000, 'time': 57.29795455932617, 'residual_norm': 128.85684800043367, 'num_of_iterations': 5000}
+With filtering out non-convergence results
+bcgs with asm on random
+{'n': 10, 'time': 0.0002117156982421875, 'residual_norm': 4.735266154712796e-29, 'num_of_iterations': 1}
+bcgs with bjacobi on random
+{'n': 10, 'time': 0.00018334388732910156, 'residual_norm': 4.735266154712796e-29, 'num_of_iterations': 1}
+bcgs with cholesky on random
+{'n': 10, 'time': 8.845329284667969e-05, 'residual_norm': 1.752062975112781e-06, 'num_of_iterations': 10}
+bcgs with cp on random
+{'n': 10, 'time': 0.07057857513427734, 'residual_norm': 0.19521838313204487, 'num_of_iterations': 10000}
+bcgs with deflation on random
+{'n': 10, 'time': 0.0013012886047363281, 'residual_norm': 1.785654364213528e-10, 'num_of_iterations': 5}
+bcgs with eisenstat on random
+{'n': 10, 'time': 0.0001232624053955078, 'residual_norm': 6.442645002403772e-10, 'num_of_iterations': 6}
+bcgs with gamg on hilbert
+bcgs with gamg on power network problem_HB_494_bus
+{'n': 494, 'time': 0.629349946975708, 'residual_norm': 0.00395057303088279, 'num_of_iterations': 73}
+bcgs with gamg on random
+{'n': 10, 'time': 0.00047707557678222656, 'residual_norm': 8.770840406647568e-08, 'num_of_iterations': 11}
+bcgs with gasm on random
+{'n': 10, 'time': 0.0001697540283203125, 'residual_norm': 4.735266154712796e-29, 'num_of_iterations': 1}
+bcgs with hmg on random
+{'n': 10, 'time': 0.00014495849609375, 'residual_norm': 8.487025323243136e-06, 'num_of_iterations': 6}
+bcgs with hypre on random
+{'n': 10, 'time': 0.0806586742401123, 'residual_norm': 6.736838560003359, 'num_of_iterations': 10000}
+bcgs with icc on random
+{'n': 10, 'time': 0.00010538101196289062, 'residual_norm': 4.490922113363174e-08, 'num_of_iterations': 11}
+bcgs with ilu on random
+{'n': 10, 'time': 6.079673767089844e-05, 'residual_norm': 4.735266154712796e-29, 'num_of_iterations': 1}
+bcgs with jacobi on random
+{'n': 10, 'time': 9.799003601074219e-05, 'residual_norm': 2.2809478771590356e-08, 'num_of_iterations': 11}
+bcgs with kaczmarz on random
+{'n': 10, 'time': 5.078315734863281e-05, 'residual_norm': 0.44738522142712034, 'num_of_iterations': 1}
+bcgs with ksp on random
+{'n': 10, 'time': 0.00012111663818359375, 'residual_norm': 6.049777975584748e-29, 'num_of_iterations': 1}
+bcgs with lmvm on random
+{'n': 10, 'time': 2.0503997802734375e-05, 'residual_norm': 0.0, 'num_of_iterations': 0}
+bcgs with lu on random
+{'n': 10, 'time': 8.654594421386719e-05, 'residual_norm': 4.4623723408638766e-30, 'num_of_iterations': 1}
+bcgs with mat on random
+{'n': 10, 'time': 9.822845458984375e-05, 'residual_norm': 0.006702859160441315, 'num_of_iterations': 13}
+bcgs with none on random
+{'n': 10, 'time': 0.00010633468627929688, 'residual_norm': 9.943845701939124e-05, 'num_of_iterations': 11}
+bcgs with pbjacobi on random
+{'n': 10, 'time': 8.797645568847656e-05, 'residual_norm': 2.2809478771590356e-08, 'num_of_iterations': 11}
+bcgs with qr on random
+{'n': 10, 'time': 0.0001652240753173828, 'residual_norm': 6.92584751007385e-30, 'num_of_iterations': 1}
+bcgs with redistribute on random
+{'n': 10, 'time': 0.00015044212341308594, 'residual_norm': 6.049777975584748e-29, 'num_of_iterations': 1}
+bcgs with redundant on random
+{'n': 10, 'time': 5.459785461425781e-05, 'residual_norm': 4.4623723408638766e-30, 'num_of_iterations': 1}
+bcgs with sor on random
+{'n': 10, 'time': 0.00010609626770019531, 'residual_norm': 6.583034907443831e-10, 'num_of_iterations': 7}
+bcgs with svd on random
+{'n': 10, 'time': 5.125999450683594e-05, 'residual_norm': 5.6559601712189204e-30, 'num_of_iterations': 1}
+bcgs with telescope on random
+{'n': 10, 'time': 0.00019812583923339844, 'residual_norm': 4.735266154712796e-29, 'num_of_iterations': 1}
+gmres with asm on random
+{'n': 10, 'time': 0.0012545585632324219, 'residual_norm': 9.036727929578645e-15, 'num_of_iterations': 1}
+gmres with bjacobi on random
+{'n': 10, 'time': 0.00018787384033203125, 'residual_norm': 9.036727929578645e-15, 'num_of_iterations': 1}
+gmres with cholesky on random
+{'n': 10, 'time': 0.0002300739288330078, 'residual_norm': 3.392483398634089e-15, 'num_of_iterations': 10}
+gmres with cp on random
+{'n': 10, 'time': 0.0005891323089599609, 'residual_norm': 0.013802205264078863, 'num_of_iterations': 60}
+gmres with deflation on random
+{'n': 10, 'time': 0.0013806819915771484, 'residual_norm': 9.825844021590703e-14, 'num_of_iterations': 5}
+gmres with eisenstat on random
+{'n': 10, 'time': 0.00018644332885742188, 'residual_norm': 3.280736002784532e-14, 'num_of_iterations': 6}
+gmres with gamg on hilbert
+{'n': 100, 'time': 0.00632929801940918, 'residual_norm': 403.86187115652376, 'num_of_iterations': 30}
+{'n': 10, 'time': 0.0008940696716308594, 'residual_norm': 65.01456138576657, 'num_of_iterations': 30}
+gmres with gamg on power network problem_HB_494_bus
+{'n': 494, 'time': 1.0979230403900146, 'residual_norm': 0.0036582809164516913, 'num_of_iterations': 144}
+gmres with gamg on random
+{'n': 10, 'time': 0.0003414154052734375, 'residual_norm': 7.06087957252022e-15, 'num_of_iterations': 10}
+gmres with gasm on random
+{'n': 10, 'time': 0.00020360946655273438, 'residual_norm': 9.036727929578645e-15, 'num_of_iterations': 1}
+gmres with hmg on random
+{'n': 10, 'time': 0.00013446807861328125, 'residual_norm': 8.405218215554671e-13, 'num_of_iterations': 6}
+gmres with hypre on random
+{'n': 10, 'time': 0.0001513957977294922, 'residual_norm': 0.43678478068933996, 'num_of_iterations': 3}
+gmres with icc on random
+{'n': 10, 'time': 0.0008275508880615234, 'residual_norm': 2.811945542759637e-16, 'num_of_iterations': 10}
+gmres with ilu on hilbert
+gmres with ilu on power network problem_HB_494_bus
+{'n': 494, 'time': 0.003245115280151367, 'residual_norm': 1.2214390789807532e-08, 'num_of_iterations': 1}
+gmres with ilu on random
+{'n': 10, 'time': 8.177757263183594e-05, 'residual_norm': 9.036727929578645e-15, 'num_of_iterations': 1}
+gmres with jacobi on random
+{'n': 10, 'time': 0.00016355514526367188, 'residual_norm': 3.4889032836373735e-15, 'num_of_iterations': 10}
+gmres with kaczmarz on random
+{'n': 10, 'time': 8.20159912109375e-05, 'residual_norm': 0.44738522141559245, 'num_of_iterations': 1}
+gmres with ksp on random
+{'n': 10, 'time': 0.00011301040649414062, 'residual_norm': 9.753173149539073e-15, 'num_of_iterations': 1}
+gmres with lmvm on random
+{'n': 10, 'time': 5.0067901611328125e-05, 'residual_norm': 0.0, 'num_of_iterations': 0}
+gmres with lu on random
+{'n': 10, 'time': 7.891654968261719e-05, 'residual_norm': 5.387508377340935e-15, 'num_of_iterations': 1}
+gmres with mat on random
+{'n': 10, 'time': 0.00015926361083984375, 'residual_norm': 2.8983401125993497e-11, 'num_of_iterations': 10}
+gmres with none on random
+{'n': 10, 'time': 0.00014448165893554688, 'residual_norm': 1.6976779072924107e-14, 'num_of_iterations': 10}
+gmres with pbjacobi on random
+{'n': 10, 'time': 0.003355264663696289, 'residual_norm': 3.4889032836373735e-15, 'num_of_iterations': 10}
+gmres with qr on random
+{'n': 10, 'time': 0.0017747879028320312, 'residual_norm': 2.4978071771664727e-15, 'num_of_iterations': 1}
+gmres with redistribute on random
+{'n': 10, 'time': 0.00015282630920410156, 'residual_norm': 9.753173149539073e-15, 'num_of_iterations': 1}
+gmres with redundant on random
+{'n': 10, 'time': 9.274482727050781e-05, 'residual_norm': 5.387508377340935e-15, 'num_of_iterations': 1}
+gmres with sor on random
+{'n': 10, 'time': 0.00016736984252929688, 'residual_norm': 1.3907622190877344e-14, 'num_of_iterations': 6}
+gmres with svd on random
+{'n': 10, 'time': 7.510185241699219e-05, 'residual_norm': 2.0508278466928204e-15, 'num_of_iterations': 1}
+gmres with telescope on random
+{'n': 10, 'time': 0.00020933151245117188, 'residual_norm': 9.036727929578645e-15, 'num_of_iterations': 1}
+richardson with asm on random
+{'n': 10, 'time': 0.00017452239990234375, 'residual_norm': 1.9798659281767916e-14, 'num_of_iterations': 1}
+richardson with bjacobi on random
+{'n': 10, 'time': 0.00019049644470214844, 'residual_norm': 1.9798659281767916e-14, 'num_of_iterations': 1}
+richardson with cholesky on random
+{'n': 10, 'time': 6.985664367675781e-05, 'residual_norm': 34530.9280491609, 'num_of_iterations': 10}
+richardson with cp on random
+{'n': 10, 'time': 0.000194549560546875, 'residual_norm': 6731.778743012846, 'num_of_iterations': 26}
+richardson with deflation on random
+richardson with eisenstat on random
+richardson with gamg on random
+{'n': 10, 'time': 0.22321295738220215, 'residual_norm': 0.0, 'num_of_iterations': 10000}
+richardson with gasm on random
+{'n': 10, 'time': 0.00017523765563964844, 'residual_norm': 1.9798659281767916e-14, 'num_of_iterations': 1}
+richardson with hmg on random
+{'n': 10, 'time': 0.05605816841125488, 'residual_norm': 0.0, 'num_of_iterations': 10000}
+richardson with hypre on random
+{'n': 10, 'time': 0.00011801719665527344, 'residual_norm': 0.0, 'num_of_iterations': 64}
+richardson with icc on random
+{'n': 10, 'time': 0.00010919570922851562, 'residual_norm': 5408.7661137873065, 'num_of_iterations': 27}
+richardson with ilu on random
+{'n': 10, 'time': 4.649162292480469e-05, 'residual_norm': 1.9798659281767916e-14, 'num_of_iterations': 1}
+richardson with jacobi on random
+richardson with kaczmarz on random
+richardson with ksp on random
+{'n': 10, 'time': 0.00011610984802246094, 'residual_norm': 1.9036535763350436e-14, 'num_of_iterations': 1}
+richardson with lmvm on random
+{'n': 10, 'time': 1.9550323486328125e-05, 'residual_norm': 0.0, 'num_of_iterations': 0}
+richardson with lu on random
+{'n': 10, 'time': 4.553794860839844e-05, 'residual_norm': 4.500002587199583e-15, 'num_of_iterations': 1}
+richardson with mat on random
+richardson with none on random
+richardson with pbjacobi on random
+richardson with qr on random
+{'n': 10, 'time': 0.00011491775512695312, 'residual_norm': 2.3183368684258295e-15, 'num_of_iterations': 1}
+richardson with redistribute on random
+{'n': 10, 'time': 0.00013208389282226562, 'residual_norm': 1.9036535763350436e-14, 'num_of_iterations': 1}
+richardson with redundant on random
+{'n': 10, 'time': 4.696846008300781e-05, 'residual_norm': 4.500002587199583e-15, 'num_of_iterations': 1}
+richardson with sor on random
+{'n': 10, 'time': 0.028245925903320312, 'residual_norm': 0.0, 'num_of_iterations': 10000}
+richardson with svd on random
+{'n': 10, 'time': 3.314018249511719e-05, 'residual_norm': 2.9009416079497823e-15, 'num_of_iterations': 1}
