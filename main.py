@@ -23,31 +23,34 @@ from datetime import datetime
 
 from constants import SEED
 import analyse
+
+# https://petsc.org/release/overview/linear_solve_table/
 import petsc4py
 petsc4py.init()
 from petsc4py import PETSc
 
+# Number is ID in the SuiteSparse Matrix Collection
+# See https://github.com/drdarshan/ssgetpy?tab=readme-ov-file
+# and https://sparse.tamu.edu/
 test_matrix_types= [
-    2,
-    1054,
+    # 2,
+    # 1054,
     "random",
-    "hilbert"
+    # "hilbert"
 ]
 
 
-# N=[10,100,200,500]#matrix size
 N=[10]#matrix size
 # N=[10,100,250,500,1000,2000,3000,5000]#matrix size
 
-# https://petsc.org/release/overview/linear_solve_table/
-
-#FOR INDIVIDUAL METHOD TEST
+#########################FOR INDIVIDUAL METHOD TEST
 PARAMS= [
     # {"method":"BCGS","preconditioner":"GAMG"},
     # {"method":"RICHARDSON","preconditioner":"NONE"},
     # {"method":"RICHARDSON","preconditioner":"GAMG"},
     # {"method":"GMRES","preconditioner":"GAMG"},
     {"method":"GMRES","preconditioner":"LMVM"},
+    # {"method":"BCGS","preconditioner":"LMVM"},
     # {"method": "BCGS", "preconditioner": "ILU"},
     # {"method":"GMRES","preconditioner":"NONE"},
     # {"method":"BCGS","preconditioner":"NONE"},
@@ -55,27 +58,29 @@ PARAMS= [
 ]
 
 
-########################3#FOR TESTING WITH ALL PRECONDITIONERS
+#########################FOR TESTING WITH ALL PRECONDITIONERS OR GRID TEST
 preconditioners=[el for el in PETSc.PC.Type.__dict__.keys() if el[:1] != '_']
+methods=[el for el in PETSc.KSP.Type.__dict__.keys() if el[:1] != '_']
+# print(len(methods))
+# print(len(preconditioners))
+#########################FOR GRID TEST
 # preconditioners=["GAMG","NONE","ILU"]
-methods=[
-    "GMRES",
-    "BCGS",
-    "RICHARDSON"
-]
-# PARAMS=[{"method":met,"preconditioner":prec} for met in methods for prec in preconditioners]
+# methods=[
+#     "GMRES",
+#     "BCGS",
+#     "RICHARDSON"
+# ]
+
 
 exception_list=[
 #     {"method":"GMRES","preconditioner":"CP"}
 ]
 
+# PARAMS=[{"method":met,"preconditioner":prec} for met in methods for prec in preconditioners]
 
-# Number is ID in the SuiteSparse Matrix Collection
-# see https://github.com/drdarshan/ssgetpy?tab=readme-ov-file
-# and https://sparse.tamu.edu/
 
-# starting_point={"method":"GMRES","preconditioner":"REDISTRIBUTE"}
 starting_point=0
+# starting_point={"method":"GMRES","preconditioner":"REDISTRIBUTE"}
 start_test=False
 for test_matrix_type in test_matrix_types:
     for param in PARAMS:
@@ -88,10 +93,18 @@ for test_matrix_type in test_matrix_types:
                     os.system(f"python slae_testing.py '{json.dumps(n)}' '{json.dumps(SEED)}' '{json.dumps(param)}' '{json.dumps(test_matrix_type)}'")
                     if type(test_matrix_type)==int:
                         break
-# mpiexec -n 2 python main.py
 
 analyse.main()
 print("Successfully displayed")
+
+# mpiexec -n 2 python main.py
+
+
+
+
+
+
+
 
 # PARAMS= [{"method":PETSc.KSP.Type.GMRES,"preconditioner": PETSc.PC.Type.ILU},
 # {"method": PETSc.KSP.Type.BCGS, "preconditioner": PETSc.PC.Type.ILU},

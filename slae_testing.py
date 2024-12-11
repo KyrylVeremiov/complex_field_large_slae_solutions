@@ -12,12 +12,15 @@ import time
 import os
 
 from analyse import check_directory
-from constants import RESIDUAL_NORM_TRESHOLD, RESULTS_DIRECTORY, DATA_DIRECTORY, ANALYSE_DIRECTORY
+from constants import *
+from get_convergence_reason import get_convergence_reason
 
 
 def run_test(n, seed, parameters, mat_test_type):
-    file_name=f"./results/n{n}_s{seed}_met{parameters['method']}_pc{parameters['preconditioner']}_mat_{mat_test_type}"
+    check_directory(RESULTS_DIRECTORY)
+    file_name=f"./{RESULTS_DIRECTORY}/n{n}_s{seed}_met{parameters['method']}_pc{parameters['preconditioner']}_mat_{mat_test_type}"
     # print(file_name)
+
     with (open(file_name+".txt", 'w') as f, redirect_stdout(f)):
         import petsc4py
         # petsc4py.init(arch="complex")
@@ -259,7 +262,6 @@ def run_test(n, seed, parameters, mat_test_type):
                     # L.view()
             return results
 
-
         # Finally, allow the user to print the solution by passing ``-view_sol`` to the script.
 
         # x.viewFromOptions('-view_sol')
@@ -311,7 +313,12 @@ def run_test(n, seed, parameters, mat_test_type):
 
                 print(f'matrix type={param["mat_name"]}\n'
                       f'method={ksp.getType()}\npreconditioner={ksp.getPC().type}\ntime={param["time"]} seconds\n'
-                      f'residual norm={ksp.getResidualNorm()}\nnumber of iterations={ksp.its}\n')
+                      f'computed residual norm={ksp.norm}\nnumber of iterations={ksp.its}\n'
+                      f'rtol={ksp.rtol}\natol={ksp.atol}\ndivtol={ksp.divtol}\nmaxit={ksp.max_it}\n'
+                      f'is converged={ksp.is_converged}\nis diverged={ksp.is_diverged}\nis iterating={ksp.is_iterating}\n'
+                      f'norm type={ksp.norm_type}\nguess nonzero={ksp.guess_nonzero}\n'
+                      f'guess knoll={ksp.guess_knoll}\nconverged reason={ksp.reason, get_convergence_reason(ksp.reason)},')
+
                 A=ksp.getOperators()[0]
                 x=ksp.getSolution()
                 b=ksp.getRhs()
@@ -321,10 +328,12 @@ def run_test(n, seed, parameters, mat_test_type):
                 # x.view()
                 # y.view()
                 # b.view()
-                print("Residual norm= ", np.sqrt(((y - b)*(y - b)).sum()))
+                # As I understand ksp.norm is computing during iterations, so it uses a preconditioned equation
+                # So to now real residual we can compute original matrix equation
+                print("Real residual norm= ", np.sqrt(((y - b)*(y - b)).sum()))
                 r_c=y-b
                 r_c.conjugate()
-                print("Residual norm= ", np.sqrt(((y - b)*r_c).sum()))
+                print("Real residual norm abs= ", abs(np.sqrt(((y - b)*r_c).sum())))
                 print("\n\n\n\n")
                 plot_portrait_matrix(A=A, n=n, mat_test_type=param["mat_name"], norm="LogNorm")
                 # PETSc.MatView(A)

@@ -36,7 +36,7 @@ def get_results():
                 elif line.startswith('time'):  # it get only "n" (with `" "`) at the beginning of line
                     parts = line.split('=')
                     res["time"]=float(parts[1].split(' ')[0])
-                elif line.startswith('residual norm'):  # it get only "n" (with `" "`) at the beginning of line
+                elif (line.startswith('Real residual norm abs') and (not USE_PETSC_RESIDUAL_NORM)) or (line.startswith('computed residual norm') and USE_PETSC_RESIDUAL_NORM):  # it get only "n" (with `" "`) at the beginning of line
                     parts = line.split('=')
                     res["residual_norm"]=float(parts[1].strip(' '))
                 elif line.startswith('number of iterations'):  # it get only "n" (with `" "`) at the beginning of line
@@ -249,9 +249,10 @@ def print_with_filter_or_not():
     print(f"{'With' if FILTER_NOT_CONVERGENCE else 'Without'} filtering out non-convergence results")
 
 
-def print_plot_data(result):
+def print_plot_data(result, num_of_suc_sim):
     with (open(ANALYSE_DIRECTORY + "/" + RESULT_FILENAME + ".txt", 'w') as f, redirect_stdout(f)):
         print_with_filter_or_not()
+        print(f"Total {num_of_suc_sim} successful simulations")
         for item in result:
             print(item["method"] +" with "+ item["preconditioner"]+ " on " +item["matrix_type"])
             for el in item["data"]:
@@ -312,27 +313,26 @@ def main():
         plot_data=make_plot_data(results)
         if FILTER_NOT_CONVERGENCE:
             plot_data=filter_non_convergence(plot_data)
-        print_plot_data(plot_data)
+        print_plot_data(plot_data,len(results))
         draw_results_changing_n(plot_data, logscale=True,treshold=True,linestyle='solid',linewidth=0.7)
         draw_results_static_n(plot_data,logscale_time=False,logscale_residual=True,treshold=True)
 
-        # for prop in ["time", "num_of_iterations", "residual_norm"]:
-        #     sorted_result = sort_best_methods(plot_data, prop)
-        #     print_sorted(sorted_result, prop)
+        for prop in ["time", "num_of_iterations", "residual_norm"]:
+            sorted_result = sort_best_methods(plot_data, prop)
+            print_sorted(sorted_result, prop)
 
         num_to_get=5
         for prop in ["time", "num_of_iterations", "residual_norm"]:
             sorted_result = sort_best_methods(plot_data, prop,number_to_get=num_to_get)
             subdirectory=f"best_{str(num_to_get)}_{prop}"
             print_sorted(sorted_result, prop, subname=f"best_{str(num_to_get)}_")
-            # draw_results_static_n(sorted_result,logscale_time=False,logscale_residual=True,
-            #                       treshold=False,grooped=True,
-            #                       subdirectory=subdirectory)
+            draw_results_static_n(sorted_result,logscale_time=False,logscale_residual=True,
+                                  treshold=False,grooped=True,
+                                  subdirectory=subdirectory)
 
             ungrooped_sorted_result=ungroup_by_n_and_type(sorted_result)
             names_set=get_names_set(ungrooped_sorted_result)
             new_plot_data=get_data_from_names_set(plot_data,names_set)
-            # new_plot_data=make_plot_data(ungrooped_sorted_result)
             draw_results_changing_n(new_plot_data, logscale=True,treshold=False,subdirectory=subdirectory)
 
 
