@@ -20,6 +20,7 @@ def get_results():
         if os.path.getsize(file_path) != 0:
             res={}
             file=open(RESULTS_DIRECTORY + "/" + filename)
+            convergence=True
             for line in file:
                 line = line.strip(' \n,')  # remove spaces, tabs but also `,`
 
@@ -38,14 +39,18 @@ def get_results():
                     res["time"]=float(parts[1].split(' ')[0])
                 elif (line.startswith('Real residual norm abs') and (not USE_PETSC_RESIDUAL_NORM)) or (line.startswith('computed residual norm') and USE_PETSC_RESIDUAL_NORM):  # it get only "n" (with `" "`) at the beginning of line
                     parts = line.split('=')
-                    res["residual_norm"]=float(parts[1].strip(' '))
+                    residual=parts[1].strip(' ')
+                    if residual=='nan':
+                        convergence=False
+                    res["residual_norm"]=float(residual)
                 elif line.startswith('number of iterations'):  # it get only "n" (with `" "`) at the beginning of line
                     parts = line.split('=')
                     res["num_of_iterations"]=int(parts[1].strip(' '))
                 elif line.startswith('matrix type'):  # it get only "n" (with `" "`) at the beginning of line
                     parts = line.split('=')
                     res["matrix_type"] = parts[1].strip(' ')
-            results.append(res)
+            if convergence:
+                results.append(res)
     return results
 
 def make_plot_data(results):
@@ -126,7 +131,7 @@ def draw_results_changing_n(plot_data, logscale=True,treshold=True,subdirectory=
                             plt.plot(x,y, label=item["method"]+" with "+item["preconditioner"],
                                      marker='o',markevery=[0], color=COLORS[color_index],
                                      linestyle=linestyle,linewidth=linewidth)
-                            color_index+=1
+                            color_index= color_index+1 if color_index<948 else 0
                             # plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
                             max_n=max(max_n,max(list(tmp_dict.keys())))
                             # print(list(tmp_dict.keys()))
@@ -204,7 +209,7 @@ def draw_results_static_n(plot_data, logscale_time=True,logscale_residual=True,
             #     print(max_time, el["coord"][0], el["coord"][1], el["name"], type(el["coord"][1]),type(el["coord"][0]))
             # else:
             plt.plot(el["time"],el["residual_norm"],'o',label=el["name"],color=COLORS[color_index])
-            color_index+=1
+            color_index= color_index+1 if color_index<948 else 0
             # ax.plot(el["coord"][0],el["coord"][1],'o',label=el["name"])
         # print(max_time)
         if treshold:
@@ -298,13 +303,13 @@ def sort_best_methods(result,prop,number_to_get=-1, grooped=False):
 def get_names_set(data):
     names_set=set()
     for item in data:
-        names_set.add((item["method"],item["preconditioner"]))
+        names_set.add((item["method"],item["preconditioner"],item["matrix_type"]))
     return names_set
 
 def get_data_from_names_set(data,names_set):
     chosen_data=[]
     for item in data:
-        if (item["method"],item["preconditioner"]) in names_set:
+        if (item["method"],item["preconditioner"],item["matrix_type"]) in names_set:
             chosen_data.append(item)
     return chosen_data
 
@@ -313,22 +318,22 @@ def main():
         plot_data=make_plot_data(results)
         if FILTER_NOT_CONVERGENCE:
             plot_data=filter_non_convergence(plot_data)
-        print_plot_data(plot_data,len(results))
-        draw_results_changing_n(plot_data, logscale=True,treshold=True,linestyle='solid',linewidth=0.7)
-        draw_results_static_n(plot_data,logscale_time=False,logscale_residual=True,treshold=True)
+        # print_plot_data(plot_data,len(results))
+        # draw_results_changing_n(plot_data, logscale=True,treshold=True,linestyle='solid',linewidth=0.7)
+        # draw_results_static_n(plot_data,logscale_time=False,logscale_residual=True,treshold=True)
 
-        for prop in ["time", "num_of_iterations", "residual_norm"]:
-            sorted_result = sort_best_methods(plot_data, prop)
-            print_sorted(sorted_result, prop)
+        # for prop in ["time", "num_of_iterations", "residual_norm"]:
+        #     sorted_result = sort_best_methods(plot_data, prop)
+        #     print_sorted(sorted_result, prop)
 
-        num_to_get=5
+        num_to_get=10
         for prop in ["time", "num_of_iterations", "residual_norm"]:
             sorted_result = sort_best_methods(plot_data, prop,number_to_get=num_to_get)
             subdirectory=f"best_{str(num_to_get)}_{prop}"
-            print_sorted(sorted_result, prop, subname=f"best_{str(num_to_get)}_")
-            draw_results_static_n(sorted_result,logscale_time=False,logscale_residual=True,
-                                  treshold=False,grooped=True,
-                                  subdirectory=subdirectory)
+            # print_sorted(sorted_result, prop, subname=f"best_{str(num_to_get)}_")
+            # draw_results_static_n(sorted_result,logscale_time=False,logscale_residual=True,
+            #                       treshold=False,grooped=True,
+            #                       subdirectory=subdirectory)
 
             ungrooped_sorted_result=ungroup_by_n_and_type(sorted_result)
             names_set=get_names_set(ungrooped_sorted_result)

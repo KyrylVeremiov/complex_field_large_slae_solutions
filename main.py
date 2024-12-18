@@ -36,12 +36,13 @@ test_matrix_types= [
     # 2,
     # 1054,
     "random",
-    # "hilbert"
+    "hilbert"
 ]
 
 
-N=[10]#matrix size
+N=[1000]#matrix size
 # N=[10,100,250,500,1000,2000,3000,5000]#matrix size
+# N=[10,100,250,500,1000]#matrix size
 
 #########################FOR INDIVIDUAL METHOD TEST
 PARAMS= [
@@ -59,10 +60,11 @@ PARAMS= [
 
 
 #########################FOR TESTING WITH ALL PRECONDITIONERS OR GRID TEST
+#
+# https://petsc.org/release/petsc4py/reference/petsc4py.PETSc.PC.Type.html
 preconditioners=[el for el in PETSc.PC.Type.__dict__.keys() if el[:1] != '_']
+# https://petsc.org/release/petsc4py/reference/petsc4py.PETSc.KSP.Type.html
 methods=[el for el in PETSc.KSP.Type.__dict__.keys() if el[:1] != '_']
-# print(len(methods))
-# print(len(preconditioners))
 #########################FOR GRID TEST
 # preconditioners=["GAMG","NONE","ILU"]
 # methods=[
@@ -73,14 +75,18 @@ methods=[el for el in PETSc.KSP.Type.__dict__.keys() if el[:1] != '_']
 
 
 exception_list=[
-#     {"method":"GMRES","preconditioner":"CP"}
+    # {"method":"QMRCGS","preconditioner":"H2OPUS"}
 ]
 
-# PARAMS=[{"method":met,"preconditioner":prec} for met in methods for prec in preconditioners]
+PARAMS=[{"method":met,"preconditioner":prec} for met in methods for prec in preconditioners]
 
+# print(len(methods))
+# print(len(preconditioners))
+# print(len(PARAMS))
+# print(PARAMS)
 
 starting_point=0
-# starting_point={"method":"GMRES","preconditioner":"REDISTRIBUTE"}
+# starting_point={"method":"QMRCGS","preconditioner":"H2OPUS"}
 start_test=False
 for test_matrix_type in test_matrix_types:
     for param in PARAMS:
