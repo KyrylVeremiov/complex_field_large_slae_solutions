@@ -18,7 +18,7 @@ from get_convergence_reason import get_convergence_reason
 
 def run_test(n, seed, parameters, mat_test_type):
     check_directory(RESULTS_DIRECTORY)
-    file_name=f"./{RESULTS_DIRECTORY}/n{n}_s{seed}_met{parameters['method']}_pc{parameters['preconditioner']}_mat_{mat_test_type}"
+    file_name=f"./{RESULTS_DIRECTORY}/{f'n{n}_s{seed}_' if type(mat_test_type) != int else ''}met{parameters['method']}_pc{parameters['preconditioner']}_mat_{mat_test_type}"
     # print(file_name)
 
     with (open(file_name+".txt", 'w') as f, redirect_stdout(f)):
@@ -36,6 +36,7 @@ def run_test(n, seed, parameters, mat_test_type):
             rstart, rend = b.getOwnershipRange()
             for row in range(rstart, rend):
                 b[row] = np.random.rand() * 10 + 0.1+  np.random.rand() * 10j
+                # b[row] = np.random.rand() * 10
             b.assemblyBegin()
             b.assemblyEnd()
             return b
@@ -131,6 +132,7 @@ def run_test(n, seed, parameters, mat_test_type):
         def get_special_matrix(mat_type):
             if mat_type=="hilbert":
                 # A_numpy =np.array(sp.linalg.hilbert(n) , dtype=np.int32)+0j
+                # A_numpy =sp.linalg.hilbert(n).astype(np.float64)*1000
                 A_numpy =sp.linalg.hilbert(n).astype(np.float64)
             A = PETSc.Mat().create()
             A.setSizes([n, n])
@@ -159,7 +161,7 @@ def run_test(n, seed, parameters, mat_test_type):
             #     # A_numpy =np.array(sp.linalg.hilbert(n) , dtype=np.int32)+0j
             #     A_numpy =sp.linalg.hilbert(n).astype(np.float64)
             A = PETSc.Mat().create()
-            A_mat.shape[0]
+            # A_mat.shape[0]
             A.setSizes([A_mat.shape[0], A_mat.shape[1]])
             # A.setType("aij")
             A.setUp()
@@ -172,7 +174,7 @@ def run_test(n, seed, parameters, mat_test_type):
             A.assemble()
             # print(sp.linalg.hilbert(n))
 
-            return (A,A_mm_tuple[11]+"_"+A_mm_tuple[1]+"_"+A_mm_tuple[2])
+            return (A,(A_mm_tuple[11]+"_"+A_mm_tuple[1]+"_"+A_mm_tuple[2]).replace('/','_or_').replace('-','_'))
 
 
         def test_slae_solution(ns, seed, alg_params):
@@ -348,10 +350,14 @@ def run_test(n, seed, parameters, mat_test_type):
                 # param["KSP"].getSolution().view()
 def plot_portrait_matrix(A, n, mat_test_type,norm="NoNorm"):
     fig, ax = plt.subplots()
-    name=mat_test_type
+    # name=mat_test_type
+    name=''.join(list(filter(str.isalnum, list(mat_test_type))))
 
     A_plot=abs(A.getValues(range(0, A.getSize()[0]), range(0, A.getSize()[1])))
-    title =name + "\nmatrix"+f" n={n} absolute values"
+    title =(name + "\nmatrix"+f" n={n} absolute values. "
+            # +"cond(A)="+str(np.linalg.cond(A_plot,p=2))
+            # +"cond(A)="+str(np.linalg.norm(A_plot,2)*np.linalg.norm(np.linalg.inv(A_plot),2))
+            )
     # ax.title=title
     # mp=plt.cm.ScalarMappable()
     # mp.set_array(A_plot)

@@ -1,3 +1,5 @@
+import json
+
 import matplotlib
 import matplotlib.pyplot as plt
 import os
@@ -37,7 +39,7 @@ def get_results():
                 elif line.startswith('time'):  # it get only "n" (with `" "`) at the beginning of line
                     parts = line.split('=')
                     res["time"]=float(parts[1].split(' ')[0])
-                elif (line.startswith('Real residual norm abs') and (not USE_PETSC_RESIDUAL_NORM)) or (line.startswith('computed residual norm') and USE_PETSC_RESIDUAL_NORM):  # it get only "n" (with `" "`) at the beginning of line
+                elif (line.startswith('Real residual norm abs') and (not USE_PETSC_RESIDUAL_NORM)) or ((line.startswith('computed residual norm') and USE_PETSC_RESIDUAL_NORM)):  # it get only "n" (with `" "`) at the beginning of line
                     parts = line.split('=')
                     residual=parts[1].strip(' ')
                     if residual=='nan':
@@ -136,7 +138,7 @@ def draw_results_changing_n(plot_data, logscale=True,treshold=True,subdirectory=
                             max_n=max(max_n,max(list(tmp_dict.keys())))
                             # print(list(tmp_dict.keys()))
                 if treshold and prop == "residual_norm":
-                    plt.plot([0,max_n],[RESIDUAL_NORM_TRESHOLD,RESIDUAL_NORM_TRESHOLD],"red",label="Treshold")
+                    plt.plot([0,max_n], [RESIDUAL_NORM_THRESHOLD, RESIDUAL_NORM_THRESHOLD], "red", label="Treshold")
                 if logscale:
                     plt.yscale("symlog")
                 plt.title(f"Dependence of {title} on {mat_type} matrix size")
@@ -145,7 +147,7 @@ def draw_results_changing_n(plot_data, logscale=True,treshold=True,subdirectory=
                 plt.legend(fontsize="9",loc='center left', bbox_to_anchor=(1, 0.5))
                 directory_to_save = ANALYSE_DIRECTORY + "/" + f"{mat_type}_matrix" + f"{'/' + subdirectory if subdirectory != '' else ''}"
                 check_directory(directory_to_save)
-                plt.savefig(directory_to_save + "/" + title + f"{'_logscale' if logscale else ''}",
+                plt.savefig(directory_to_save + "/" + title + f"{'_logscale' if logscale else ''}"+f"_thr{RESIDUAL_NORM_THRESHOLD:.0E}",
                             bbox_inches="tight")
                 plt.show()
 
@@ -213,7 +215,7 @@ def draw_results_static_n(plot_data, logscale_time=True,logscale_residual=True,
             # ax.plot(el["coord"][0],el["coord"][1],'o',label=el["name"])
         # print(max_time)
         if treshold:
-            plt.plot([0,max_time],[RESIDUAL_NORM_TRESHOLD,RESIDUAL_NORM_TRESHOLD],"red",label="Treshold")
+            plt.plot([0,max_time], [RESIDUAL_NORM_THRESHOLD, RESIDUAL_NORM_THRESHOLD], "red", label="Treshold")
         # ax.set_xticks((0,max_time))
         plt.legend(fontsize="9",loc='center left', bbox_to_anchor=(1, 0.5))
         plt.title(f"{item[1]} matrix of size n={item[0]}")
@@ -223,7 +225,8 @@ def draw_results_static_n(plot_data, logscale_time=True,logscale_residual=True,
 
         directory_to_save= ANALYSE_DIRECTORY + "/" + f"{item[1]}_matrix" + f"{'/' + subdirectory if subdirectory != '' else ''}"
         check_directory(directory_to_save)
-        plt.savefig(directory_to_save+"/" f"n_{item[0]}_time_residual" + f"{'_logscale' if logscale_residual else ''}",
+        plt.savefig(directory_to_save+"/" f"n_{item[0]}_time_residual" + f"{'_logscale' if logscale_residual else ''}"
+                    +f"_thr{RESIDUAL_NORM_THRESHOLD:.0E}",
                     bbox_inches="tight")
         plt.show()
 
@@ -239,7 +242,7 @@ def filter_non_convergence(result):
             # print(el["residual_norm"])
             # print(el)
             # if el["residual_norm"] > 10:
-            if el["residual_norm"] > RESIDUAL_NORM_TRESHOLD:
+            if el["residual_norm"] > RESIDUAL_NORM_THRESHOLD:
                 # item["data"].remove(el)
                 del_res.append(el)
                 # print(el["residual_norm"])
@@ -250,13 +253,13 @@ def filter_non_convergence(result):
                 item["data"].remove(el)
     return result
 
-def print_with_filter_or_not():
-    print(f"{'With' if FILTER_NOT_CONVERGENCE else 'Without'} filtering out non-convergence results")
+def print_with_filter_or_not(filter=FILTER_NOT_CONVERGENCE):
+    print(f"{'With' if filter else 'Without'} filtering out non-convergence results")
 
 
-def print_plot_data(result, num_of_suc_sim):
+def print_plot_data(result, num_of_suc_sim, filtered=FILTER_NOT_CONVERGENCE):
     with (open(ANALYSE_DIRECTORY + "/" + RESULT_FILENAME + ".txt", 'w') as f, redirect_stdout(f)):
-        print_with_filter_or_not()
+        print_with_filter_or_not(filtered)
         print(f"Total {num_of_suc_sim} successful simulations")
         for item in result:
             print(item["method"] +" with "+ item["preconditioner"]+ " on " +item["matrix_type"])
@@ -264,7 +267,7 @@ def print_plot_data(result, num_of_suc_sim):
                 print(el)
 
 
-def print_sorted(data, prop, subname=""):
+def print_sorted(data, prop, subname="", filtered=FILTER_NOT_CONVERGENCE):
     if prop == "time":
         filename = RESULT_TIME_FILENAME
     elif prop == "num_of_iterations":
@@ -274,7 +277,7 @@ def print_sorted(data, prop, subname=""):
     directory_to_save= ANALYSE_DIRECTORY+'/'
     check_directory(directory_to_save)
     with (open(directory_to_save +f"{subname if subname != '' else ''}"+ filename + ".txt", 'w') as f, redirect_stdout(f)):
-        print_with_filter_or_not()
+        print_with_filter_or_not(filtered)
         for item in data.items():
             print(item[0])
             i = 1
@@ -283,7 +286,7 @@ def print_sorted(data, prop, subname=""):
                 i+=1
 
 
-def sort_best_methods(result,prop,number_to_get=-1, grooped=False):
+def sort_best_methods(result,prop,number_to_get=-1, grooped=False, relative_threshold=-1):
     sorted_n_type_dict={}
     if grooped:
         n_type_dict=result
@@ -294,10 +297,19 @@ def sort_best_methods(result,prop,number_to_get=-1, grooped=False):
     for item in n_type_dict.items():
         sorted_list=item[1]
         sorted_list.sort(key=lambda el: el[prop])
-        if number_to_get<0:
-            sorted_n_type_dict[item[0]]=sorted_list
-        else:
+        if number_to_get>=0:
             sorted_n_type_dict[item[0]]=sorted_list[:number_to_get]
+        elif relative_threshold>=0:
+            new_list=[]
+            best_res=sorted_list[0][prop]
+            for el in sorted_list:
+                if el[prop]<best_res+relative_threshold:
+                    new_list.append(el)
+                else:
+                    break
+            sorted_n_type_dict[item[0]]=new_list
+        else:
+            sorted_n_type_dict[item[0]]=sorted_list
     return sorted_n_type_dict
 
 def get_names_set(data):
@@ -305,6 +317,19 @@ def get_names_set(data):
     for item in data:
         names_set.add((item["method"],item["preconditioner"],item["matrix_type"]))
     return names_set
+
+def write_names_set(names_set,filename):
+    names= set()
+    for item in names_set:
+        names.add((item[0],item[1]))
+    names_dict_list=[]
+    for el in names:
+        names_dict_list.append({"method":el[0].upper(),"preconditioner":el[1].upper()})
+    json_object = json.dumps(names_dict_list)
+
+    with open(filename, "w") as outfile:
+        outfile.write(json_object)
+
 
 def get_data_from_names_set(data,names_set):
     chosen_data=[]
@@ -316,31 +341,46 @@ def get_data_from_names_set(data,names_set):
 def main():
         results=get_results()
         plot_data=make_plot_data(results)
+        print_plot_data(plot_data, len(results), filtered=False)
+        for prop in ["time", "num_of_iterations", "residual_norm"]:
+            sorted_result = sort_best_methods(plot_data, prop)
+            print_sorted(sorted_result, prop, filtered=False)
+
         if FILTER_NOT_CONVERGENCE:
             plot_data=filter_non_convergence(plot_data)
-        # print_plot_data(plot_data,len(results))
-        # draw_results_changing_n(plot_data, logscale=True,treshold=True,linestyle='solid',linewidth=0.7)
-        # draw_results_static_n(plot_data,logscale_time=False,logscale_residual=True,treshold=True)
+        draw_results_changing_n(plot_data, logscale=True,treshold=True,linestyle='solid',linewidth=0.7)
+        draw_results_static_n(plot_data,logscale_time=False,logscale_residual=True,treshold=True)
 
-        # for prop in ["time", "num_of_iterations", "residual_norm"]:
-        #     sorted_result = sort_best_methods(plot_data, prop)
-        #     print_sorted(sorted_result, prop)
 
         num_to_get=10
         for prop in ["time", "num_of_iterations", "residual_norm"]:
             sorted_result = sort_best_methods(plot_data, prop,number_to_get=num_to_get)
             subdirectory=f"best_{str(num_to_get)}_{prop}"
-            # print_sorted(sorted_result, prop, subname=f"best_{str(num_to_get)}_")
-            # draw_results_static_n(sorted_result,logscale_time=False,logscale_residual=True,
-            #                       treshold=False,grooped=True,
-            #                       subdirectory=subdirectory)
+            print_sorted(sorted_result, prop, subname=f"best_{str(num_to_get)}_")
+            draw_results_static_n(sorted_result,logscale_time=False,logscale_residual=True,
+                                  treshold=False,grooped=True,
+                                  subdirectory=subdirectory)
 
             ungrooped_sorted_result=ungroup_by_n_and_type(sorted_result)
             names_set=get_names_set(ungrooped_sorted_result)
             new_plot_data=get_data_from_names_set(plot_data,names_set)
             draw_results_changing_n(new_plot_data, logscale=True,treshold=False,subdirectory=subdirectory)
 
+        RELATIVE_RESIDUAL_THRESHOLD=10
+        prop="residual_norm"
+        sorted_result = sort_best_methods(plot_data, prop, relative_threshold=RELATIVE_RESIDUAL_THRESHOLD)
+        subdirectory = f"best_{prop}_relative_res_threshold_{RELATIVE_RESIDUAL_THRESHOLD}"
+        print_sorted(sorted_result, prop, subname=f"best_relative_res_threshold_{RELATIVE_RESIDUAL_THRESHOLD}_")
+        draw_results_static_n(sorted_result, logscale_time=False, logscale_residual=True,
+                              treshold=False, grooped=True,
+                              subdirectory=subdirectory)
 
+        ungrooped_sorted_result = ungroup_by_n_and_type(sorted_result)
+        names_set = get_names_set(ungrooped_sorted_result)
+        new_plot_data = get_data_from_names_set(plot_data, names_set)
+        draw_results_changing_n(new_plot_data, logscale=True, treshold=False, subdirectory=subdirectory)
+
+        write_names_set(names_set,ANALYSE_DIRECTORY+'/'+BEST_RES_REL_THR_RESULT_FILENAME)
 
 if __name__ == "__main__":
     main()

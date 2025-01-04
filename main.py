@@ -21,7 +21,7 @@ import json
 from crypt import methods
 from datetime import datetime
 
-from constants import SEED
+from constants import *
 import analyse
 
 # https://petsc.org/release/overview/linear_solve_table/
@@ -34,17 +34,31 @@ from petsc4py import PETSc
 # and https://sparse.tamu.edu/
 test_matrix_types= [
     # 2,
-    # 1054,
-    "random",
-    "hilbert"
+
+    # "random",
+    # "hilbert"
+
+    281,
+    1621,
+    1620,
+    1054,
+    326,
+    1595,
+    1597,
+    378,
+    540,
+    1366,
 ]
 
 
-N=[1000]#matrix size
+N=[100]#matrix size
 # N=[10,100,250,500,1000,2000,3000,5000]#matrix size
 # N=[10,100,250,500,1000]#matrix size
 
-#########################FOR INDIVIDUAL METHOD TEST
+
+
+
+#########################    FOR INDIVIDUAL METHOD TEST    #########################
 PARAMS= [
     # {"method":"BCGS","preconditioner":"GAMG"},
     # {"method":"RICHARDSON","preconditioner":"NONE"},
@@ -59,7 +73,7 @@ PARAMS= [
 ]
 
 
-#########################FOR TESTING WITH ALL PRECONDITIONERS OR GRID TEST
+#########################   FOR TESTING WITH ALL PRECONDITIONERS OR GRID TEST   #########################
 #
 # https://petsc.org/release/petsc4py/reference/petsc4py.PETSc.PC.Type.html
 preconditioners=[el for el in PETSc.PC.Type.__dict__.keys() if el[:1] != '_']
@@ -78,16 +92,32 @@ exception_list=[
     # {"method":"QMRCGS","preconditioner":"H2OPUS"}
 ]
 
-PARAMS=[{"method":met,"preconditioner":prec} for met in methods for prec in preconditioners]
+# PARAMS=[{"method":met,"preconditioner":prec} for met in methods for prec in preconditioners]
 
-# print(len(methods))
-# print(len(preconditioners))
-# print(len(PARAMS))
-# print(PARAMS)
+
+#########################    TESTING FORM FILE    #########################
+
+
+# def get_best_results(filename):
+#     with open(filename, 'r') as openfile:
+#         json_object = json.load(openfile)
+#     return json_object
+#
+# PARAMS=get_best_results(BEST_RES_REL_THR_RESULT_FILENAME)
+
+
+
+
+# print(len(methods), "methods")
+# print(len(preconditioners), "preconditioners")
+print(len(PARAMS), "configurations")
+# print("Configurations: ",PARAMS)
 
 starting_point=0
 # starting_point={"method":"QMRCGS","preconditioner":"H2OPUS"}
-start_test=False
+
+
+# start_test=False
 for test_matrix_type in test_matrix_types:
     for param in PARAMS:
         if (starting_point==0) or (param==starting_point):
