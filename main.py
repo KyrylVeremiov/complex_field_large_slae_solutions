@@ -29,6 +29,14 @@ import petsc4py
 petsc4py.init()
 from petsc4py import PETSc
 
+def get_best_results(filename):
+    with open(filename, 'r') as openfile:
+        json_object = json.load(openfile)
+    return json_object
+
+
+
+
 # Number is ID in the SuiteSparse Matrix Collection
 # See https://github.com/drdarshan/ssgetpy?tab=readme-ov-file
 # and https://sparse.tamu.edu/
@@ -38,13 +46,13 @@ test_matrix_types= [
     # "random",
     # "hilbert"
 
-    281,
-    1621,
-    1620,
-    1054,
-    326,
-    1595,
-    1597,
+    # 281,
+    # 1621,
+    # 1620,
+    # 1054,
+    # 326,
+    # 1595,
+    # 1597,
     378,
     540,
     1366,
@@ -59,18 +67,19 @@ N=[100]#matrix size
 
 
 #########################    FOR INDIVIDUAL METHOD TEST    #########################
-PARAMS= [
-    # {"method":"BCGS","preconditioner":"GAMG"},
-    # {"method":"RICHARDSON","preconditioner":"NONE"},
-    # {"method":"RICHARDSON","preconditioner":"GAMG"},
-    # {"method":"GMRES","preconditioner":"GAMG"},
-    {"method":"GMRES","preconditioner":"LMVM"},
-    # {"method":"BCGS","preconditioner":"LMVM"},
-    # {"method": "BCGS", "preconditioner": "ILU"},
-    # {"method":"GMRES","preconditioner":"NONE"},
-    # {"method":"BCGS","preconditioner":"NONE"},
-    # {"method":"CG","preconditioner":"GAMG"}
-]
+# PARAMS= [
+#     {"method":"PIPEBCGS","preconditioner": "ILU"}
+#     {"method":"BCGS","preconditioner":"GAMG"},
+#     {"method":"RICHARDSON","preconditioner":"NONE"},
+#     {"method":"RICHARDSON","preconditioner":"GAMG"},
+#     {"method":"GMRES","preconditioner":"GAMG"},
+#     {"method":"GMRES","preconditioner":"LMVM"},
+#     {"method":"BCGS","preconditioner":"LMVM"},
+#     {"method": "BCGS", "preconditioner": "ILU"},
+#     {"method":"GMRES","preconditioner":"NONE"},
+#     {"method":"BCGS","preconditioner":"NONE"},
+#     {"method":"CG","preconditioner":"GAMG"}
+# ]
 
 
 #########################   FOR TESTING WITH ALL PRECONDITIONERS OR GRID TEST   #########################
@@ -96,28 +105,28 @@ exception_list=[
 
 
 #########################    TESTING FORM FILE    #########################
-
-
-# def get_best_results(filename):
-#     with open(filename, 'r') as openfile:
-#         json_object = json.load(openfile)
-#     return json_object
-#
 # PARAMS=get_best_results(BEST_RES_REL_THR_RESULT_FILENAME)
+
+PARAMS=get_best_results(BEST_RES_REL_THR_TIME_THR_RESULT_FILENAME)
+
+
+
+
 
 
 
 
 # print(len(methods), "methods")
 # print(len(preconditioners), "preconditioners")
+
 print(len(PARAMS), "configurations")
-# print("Configurations: ",PARAMS)
+print("Configurations: ",PARAMS)
 
 starting_point=0
-# starting_point={"method":"QMRCGS","preconditioner":"H2OPUS"}
+# starting_point={"method":"BICG","preconditioner":"QR"}
 
 
-# start_test=False
+start_test=False
 for test_matrix_type in test_matrix_types:
     for param in PARAMS:
         if (starting_point==0) or (param==starting_point):
@@ -142,7 +151,7 @@ print("Successfully displayed")
 
 
 
-# PARAMS= [{"method":PETSc.KSP.Type.GMRES,"preconditioner": PETSc.PC.Type.ILU},
+# PARAMS= [{"method":PETSc.KSP.Type.PIPEBCGS,"preconditioner": PETSc.PC.Type.ILU},
 # {"method": PETSc.KSP.Type.BCGS, "preconditioner": PETSc.PC.Type.ILU},
 #                    ]
 

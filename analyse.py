@@ -1,4 +1,5 @@
 import json
+from types import NoneType
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -303,10 +304,14 @@ def sort_best_methods(result,prop,number_to_get=-1, grooped=False, relative_thre
             new_list=[]
             best_res=sorted_list[0][prop]
             for el in sorted_list:
-                if el[prop]<best_res+relative_threshold:
-                    new_list.append(el)
+                if relative_threshold!=-1:
+                    if el[prop]<best_res+relative_threshold:
+                        new_list.append(el)
+                    else:
+                        break
                 else:
-                    break
+                    new_list=sorted_list
+
             sorted_n_type_dict[item[0]]=new_list
         else:
             sorted_n_type_dict[item[0]]=sorted_list
@@ -338,6 +343,42 @@ def get_data_from_names_set(data,names_set):
             chosen_data.append(item)
     return chosen_data
 
+def filter_methods_by_time(result,time_threshold=-1):
+    if time_threshold != -1:
+        remove_set = set()
+        # number_of_method_success= {}
+        for item in result:
+            # print(len(result[item]))
+            for el in result[item]:
+                if el["time"] > time_threshold:
+                    remove_set.add(el["name"])
+                # else:
+                    # if el['name'] not in number_of_method_success:
+                    #     number_of_method_success[el['name']]=0
+                    # number_of_method_success[el['name']]+=1
+
+        # print()
+        # print()
+
+        new_result={}
+        for item in result:
+            new_result[item] = []
+            for el in result[item]:
+                if el["name"] not in remove_set:
+                    new_result[item].append(el)
+                # if (el["name"] not in remove_set) and el['name'] in number_of_method_success:
+                #     if number_of_method_success[el['name']] == len(result):
+                #         result[item].remove(el)
+                        # new_result[item].append(el)
+
+
+        # print()
+        # print()
+        # print(remove_set)
+        # print(result)
+    return new_result
+
+
 def main():
         results=get_results()
         plot_data=make_plot_data(results)
@@ -366,7 +407,6 @@ def main():
             new_plot_data=get_data_from_names_set(plot_data,names_set)
             draw_results_changing_n(new_plot_data, logscale=True,treshold=False,subdirectory=subdirectory)
 
-        RELATIVE_RESIDUAL_THRESHOLD=10
         prop="residual_norm"
         sorted_result = sort_best_methods(plot_data, prop, relative_threshold=RELATIVE_RESIDUAL_THRESHOLD)
         subdirectory = f"best_{prop}_relative_res_threshold_{RELATIVE_RESIDUAL_THRESHOLD}"
@@ -381,6 +421,23 @@ def main():
         draw_results_changing_n(new_plot_data, logscale=True, treshold=False, subdirectory=subdirectory)
 
         write_names_set(names_set,ANALYSE_DIRECTORY+'/'+BEST_RES_REL_THR_RESULT_FILENAME)
+
+
+        # CONSIDERING TIME
+        filtered_time_sorted_result=filter_methods_by_time(sorted_result,time_threshold=TIME_THRESHOLD)
+        subdirectory = f"best_{prop}_relative_res_thr_{RELATIVE_RESIDUAL_THRESHOLD}_time_thr_{TIME_THRESHOLD}"
+        print_sorted(filtered_time_sorted_result, prop, subname=f"best_relative_res_threshold_{RELATIVE_RESIDUAL_THRESHOLD}_time_thr_{TIME_THRESHOLD}")
+        draw_results_static_n(filtered_time_sorted_result, logscale_time=False, logscale_residual=True,
+                              treshold=False, grooped=True,
+                              subdirectory=subdirectory)
+
+        ungrooped_filtered_sorted_result = ungroup_by_n_and_type(filtered_time_sorted_result)
+        names_set = get_names_set(ungrooped_filtered_sorted_result)
+        new_plot_data = get_data_from_names_set(plot_data, names_set)
+        draw_results_changing_n(new_plot_data, logscale=True, treshold=False, subdirectory=subdirectory)
+
+        write_names_set(names_set,ANALYSE_DIRECTORY+'/'+BEST_RES_REL_THR_TIME_THR_RESULT_FILENAME)
+
 
 if __name__ == "__main__":
     main()

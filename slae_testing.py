@@ -337,6 +337,7 @@ def run_test(n, seed, parameters, mat_test_type):
                 r_c.conjugate()
                 print("Real residual norm abs= ", abs(np.sqrt(((y - b)*r_c).sum())))
                 print("\n\n\n\n")
+
                 plot_portrait_matrix(A=A, n=n, mat_test_type=param["mat_name"], norm="LogNorm")
                 # PETSc.MatView(A)
                 # PETSc.Viewer.createDraw(A)
