@@ -21,10 +21,20 @@ import json
 from crypt import methods
 from datetime import datetime
 
+from analyse import check_directory
 from constants import *
 import analyse
 
 # https://petsc.org/release/overview/linear_solve_table/
+
+import time
+from contextlib import redirect_stdout
+# import subprocess
+
+from multiprocessing import Process
+import psutil
+import signal
+
 import petsc4py
 petsc4py.init()
 from petsc4py import PETSc
@@ -53,6 +63,8 @@ test_matrix_types= [
     # 326,
     # 1595,
     # 1597,
+
+
     378,
     540,
     1366,
@@ -68,14 +80,14 @@ N=[100]#matrix size
 
 #########################    FOR INDIVIDUAL METHOD TEST    #########################
 # PARAMS= [
-#     {"method":"PIPEBCGS","preconditioner": "ILU"}
-#     {"method":"BCGS","preconditioner":"GAMG"},
-#     {"method":"RICHARDSON","preconditioner":"NONE"},
-#     {"method":"RICHARDSON","preconditioner":"GAMG"},
-#     {"method":"GMRES","preconditioner":"GAMG"},
-#     {"method":"GMRES","preconditioner":"LMVM"},
-#     {"method":"BCGS","preconditioner":"LMVM"},
-#     {"method": "BCGS", "preconditioner": "ILU"},
+#     {"method":"PIPEBCGS","preconditioner": "ILU"},
+    # {"method":"BCGS","preconditioner":"GAMG"},
+    # {"method":"RICHARDSON","preconditioner":"NONE"},
+    # {"method":"RICHARDSON","preconditioner":"GAMG"},
+    # {"method":"GMRES","preconditioner":"GAMG"},
+    # {"method":"GMRES","preconditioner":"LMVM"},
+    # {"method":"BCGS","preconditioner":"LMVM"},
+    # {"method": "BCGS", "preconditioner": "ILU"},
 #     {"method":"GMRES","preconditioner":"NONE"},
 #     {"method":"BCGS","preconditioner":"NONE"},
 #     {"method":"CG","preconditioner":"GAMG"}
@@ -97,12 +109,6 @@ methods=[el for el in PETSc.KSP.Type.__dict__.keys() if el[:1] != '_']
 # ]
 
 
-exception_list=[
-    # {"method":"QMRCGS","preconditioner":"H2OPUS"}
-]
-
-# PARAMS=[{"method":met,"preconditioner":prec} for met in methods for prec in preconditioners]
-
 
 #########################    TESTING FORM FILE    #########################
 # PARAMS=get_best_results(BEST_RES_REL_THR_RESULT_FILENAME)
@@ -123,7 +129,13 @@ print(len(PARAMS), "configurations")
 print("Configurations: ",PARAMS)
 
 starting_point=0
-# starting_point={"method":"BICG","preconditioner":"QR"}
+starting_point={"method":"NONE","preconditioner":"ASM"}
+
+exception_list=[
+    # {"method":"BICG","preconditioner":"JACOBI"}
+]
+
+
 
 
 start_test=False
@@ -135,7 +147,121 @@ for test_matrix_type in test_matrix_types:
             if param not in exception_list:
                 for n in N:
                     print(param,f"{f'on suite sparse matrix with id {test_matrix_type}' if type(test_matrix_type)==int else f' on {test_matrix_type} matrix of size n={n}'} begins at {datetime.now()}")
-                    os.system(f"python slae_testing.py '{json.dumps(n)}' '{json.dumps(SEED)}' '{json.dumps(param)}' '{json.dumps(test_matrix_type)}'")
+
+
+
+                    # argument = f"'{json.dumps(n)}' '{json.dumps(SEED)}' '{json.dumps(param)}' '{json.dumps(test_matrix_type)}'"
+                    # # proc = subprocess.Popen(['python', 'slae_testing.py', f"'{json.dumps(n)}'",f"'{json.dumps(SEED)}'",f"'{json.dumps(param)}'",
+                    # #                          f"'{json.dumps(test_matrix_type)}'"], shell=True)
+                    # # proc = subprocess.Popen(['python', f" slae_testing.py '{json.dumps(n)}' '{json.dumps(SEED)}' '{json.dumps(param)}' '{json.dumps(test_matrix_type)}'"], shell=True)
+                    # proc = subprocess.Popen(['python', 'slae_testing.py', argument], shell=True)
+                    # # time.sleep(3)  # <-- There's no time.wait, but time.sleep.
+                    # # pid = proc.pid
+                    # # proc.kill()
+                    #
+                    # start_time = time.time()
+                    # check_interval_s = 5  # regularly check what the process is doing
+                    #
+                    # kill_process = False
+                    # finished_work = False
+                    #
+                    # while not kill_process and not finished_work:
+                    #     time.sleep(check_interval_s)
+                    #     runtime = time.time() - start_time
+                    #     # print("Doing, ", runtime)
+                    #
+                    #     if not proc.poll() is None:
+                    #         print("Finished")
+                    #         finished_work = True
+                    #
+                    #     elif runtime > TIMEOUT:
+                    #         print("EXCEEDED TIMEOUT LIMIT")
+                    #         kill_process = True
+                    # proc.kill()
+                    #
+                    # if kill_process:
+                    #     check_directory(RESULTS_DIRECTORY)
+                    #     file_name = f"./{RESULTS_DIRECTORY}/{f'n{n}_s{SEED}_' if type(test_matrix_type) != int else ''}met{param['method']}_pc{param['preconditioner']}_mat_{test_matrix_type}"
+                    #
+                    #     with (open(file_name + ".txt", 'w') as f, redirect_stdout(f)):
+                    #         print("EXCEEDED TIMEOUT LIMIT")
+
+                    cmd_command=f"python slae_testing.py '{json.dumps(n)}' '{json.dumps(SEED)}' '{json.dumps(param)}' '{json.dumps(test_matrix_type)}'"
+                    p = Process(target=lambda: os.system(cmd_command))
+                    p.start()
+
+                    start_time = time.time()
+                    check_interval_s = 5  # regularly check what the process is doing
+
+                    kill_process = False
+                    finished_work = False
+
+                    while not kill_process and not finished_work:
+                        time.sleep(check_interval_s)
+                        runtime = time.time() - start_time
+                        # print("Doing, ", runtime)
+
+                        if not p.is_alive():
+                            print("Finished")
+                            finished_work = True
+
+                        if runtime > TIMEOUT and not finished_work:
+                            print("EXCEEDED TIMEOUT LIMIT")
+                            kill_process = True
+
+                    if kill_process:
+                        check_directory(RESULTS_DIRECTORY)
+                        file_name = f"./{RESULTS_DIRECTORY}/{f'n{n}_s{SEED}_' if type(test_matrix_type) != int else ''}met{param['method']}_pc{param['preconditioner']}_mat_{test_matrix_type}"
+
+                        with (open(file_name + ".txt", 'w') as f, redirect_stdout(f)):
+                            print("EXCEEDED TIMEOUT LIMIT")
+                        # while p.is_alive():
+                        #     # forcefully kill the process, because often (during heavvy computations) a graceful termination
+                        #     # can be ignored by a process.terminate
+                        #     # print(f"send SIGKILL signal to process because exceeding {TIMEOUT} seconds.")
+                        #     os.system(f"kill -9 {p.pid}")
+                        #
+                        #
+                        #     if p.is_alive():
+                        #         time.sleep(5)
+
+
+                    for pr in psutil.process_iter():
+                        if cmd_command in pr.name() or cmd_command in ' '.join(pr.cmdline()):
+                            # pr.terminate()
+                            # pr.wait()
+                            # pr.kill()
+                            pid=pr.pid
+                            try:
+                                os.kill(pid+1, signal.SIGTERM)
+                                # print(f"Sent SIGTERM signal to process {pid}")
+                            except OSError:
+                                print(f"Failed to send SIGTERM signal to process {pid}")
+                            # print(pr.pid)
+                            # print(pr.cmdline())
+
+
+
+                    while p.is_alive():
+                        # forcefully kill the process, because often (during heavvy computations) a graceful termination
+                        # can be ignored by a process.
+                        # print(f"send SIGKILL signal to process because exceeding {TIMEOUT} seconds.")
+                        p.kill()
+                        # os.system(f"kill -9 {p.pid}")
+
+                        if p.is_alive():
+                            time.sleep(5)
+
+                    try:
+                        p.join(30)  # wait 30 seconds to join the process
+                        # print("Processes are successfully joined")
+
+                    except Exception:
+                        # This can happen if a process was killed for other reasons (such as out of memory)
+                        print("Joining the process and receiving results failed, results are set as invalid.")
+
+
+
                     if type(test_matrix_type)==int:
                         break
 

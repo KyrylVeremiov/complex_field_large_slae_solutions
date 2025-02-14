@@ -28,7 +28,9 @@ def get_results():
                 line = line.strip(' \n,')  # remove spaces, tabs but also `,`
 
                 # if 'n' in line:            # it get `n` in any place - ie. 'small n'
-                if line.startswith('n='):  # it get only "n" (with `" "`) at the beginning of line
+                if line.startswith('EXCEEDED TIMEOUT LIMIT'):
+                    convergence=False
+                elif line.startswith('n='):  # it get only "n" (with `" "`) at the beginning of line
                     parts = line.split('=')
                     res["n"]=int(parts[1].strip(' '))
                 elif line.startswith('method'):  # it get only "n" (with `" "`) at the beginning of line
