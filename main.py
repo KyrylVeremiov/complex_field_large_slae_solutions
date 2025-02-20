@@ -21,6 +21,8 @@ import json
 from crypt import methods
 from datetime import datetime
 
+from pandas.core.arrays import DatetimeArray
+
 from analyse import check_directory
 from constants import *
 import analyse
@@ -51,8 +53,7 @@ def get_best_results(filename):
 # See https://github.com/drdarshan/ssgetpy?tab=readme-ov-file
 # and https://sparse.tamu.edu/
 test_matrix_types= [
-    # 2,
-
+    2,
     # "random",
     # "hilbert"
 
@@ -65,10 +66,19 @@ test_matrix_types= [
     # 1597,
 
 
-    378,
-    540,
-    1366,
+    # 378,
+    # 540,
+    # 1366,
+
+    # 435,
+    # 312,
+    # 39,
+    # 443,
+    # 811
 ]
+import scipy as sp
+from ssgetpy import search, fetch
+import numpy as np
 
 
 N=[100]#matrix size
@@ -78,20 +88,21 @@ N=[100]#matrix size
 
 
 
+
 #########################    FOR INDIVIDUAL METHOD TEST    #########################
-# PARAMS= [
-#     {"method":"PIPEBCGS","preconditioner": "ILU"},
+PARAMS= [
+    # {"method":"PIPEBCGS","preconditioner": "ILU"},
     # {"method":"BCGS","preconditioner":"GAMG"},
     # {"method":"RICHARDSON","preconditioner":"NONE"},
     # {"method":"RICHARDSON","preconditioner":"GAMG"},
     # {"method":"GMRES","preconditioner":"GAMG"},
     # {"method":"GMRES","preconditioner":"LMVM"},
     # {"method":"BCGS","preconditioner":"LMVM"},
-    # {"method": "BCGS", "preconditioner": "ILU"},
+    {"method": "BCGS", "preconditioner": "ILU"},
 #     {"method":"GMRES","preconditioner":"NONE"},
 #     {"method":"BCGS","preconditioner":"NONE"},
 #     {"method":"CG","preconditioner":"GAMG"}
-# ]
+]
 
 
 #########################   FOR TESTING WITH ALL PRECONDITIONERS OR GRID TEST   #########################
@@ -113,8 +124,7 @@ methods=[el for el in PETSc.KSP.Type.__dict__.keys() if el[:1] != '_']
 #########################    TESTING FORM FILE    #########################
 # PARAMS=get_best_results(BEST_RES_REL_THR_RESULT_FILENAME)
 
-PARAMS=get_best_results(BEST_RES_REL_THR_TIME_THR_RESULT_FILENAME)
-
+# PARAMS=get_best_results(BEST_RES_REL_THR_TIME_THR_RESULT_FILENAME)
 
 
 
@@ -129,7 +139,7 @@ print(len(PARAMS), "configurations")
 print("Configurations: ",PARAMS)
 
 starting_point=0
-starting_point={"method":"NONE","preconditioner":"ASM"}
+# starting_point={"method":"GROPPCG","preconditioner":"QR"}
 
 exception_list=[
     # {"method":"BICG","preconditioner":"JACOBI"}
@@ -186,7 +196,8 @@ for test_matrix_type in test_matrix_types:
                     #     with (open(file_name + ".txt", 'w') as f, redirect_stdout(f)):
                     #         print("EXCEEDED TIMEOUT LIMIT")
 
-                    cmd_command=f"python slae_testing.py '{json.dumps(n)}' '{json.dumps(SEED)}' '{json.dumps(param)}' '{json.dumps(test_matrix_type)}'"
+                    # cmd_command=f"python slae_testing.py '{json.dumps(n)}' '{json.dumps(SEED)}' '{json.dumps(param)}' '{json.dumps(test_matrix_type)}'"
+                    cmd_command=f"/home/userone/miniconda3/envs/env3-10-complex/bin/python slae_testing.py '{json.dumps(n)}' '{json.dumps(SEED)}' '{json.dumps(param)}' '{json.dumps(test_matrix_type)}'"
                     p = Process(target=lambda: os.system(cmd_command))
                     p.start()
 

@@ -172,23 +172,47 @@ def run_test(n, seed, parameters, mat_test_type):
                 viewer_A = PETSc.Viewer().createBinary(matrix_filename, mode=PETSc.Viewer.Mode.READ, comm=A.getComm())
                 A = PETSc.Mat().load(viewer_A)
             else:
-                A_mat=sp.io.mmread(data_dir+"/"+os.listdir(data_dir)[0]).toarray()
-                # if mat_type=="hilbert":
-                #     # A_numpy =np.array(sp.linalg.hilbert(n) , dtype=np.int32)+0j
-                #     A_numpy =sp.linalg.hilbert(n).astype(np.float64)
-                A = PETSc.Mat().create()
-                # A_mat.shape[0]
-                A.setSizes([A_mat.shape[0], A_mat.shape[1]])
-                # A.setType("aij")
-                A.setUp()
-                # print(A_mat.shape[0])
-
-                # First arg is list of row indices, second list of column indices
-                # A.setValues([1, 2, 3], [0, 5, 9], np.ones((3, 3)))
-                # A.setValues(np.arange(n), np.arange(n), A_numpy)
-                A.setValues(np.arange(A_mat.shape[0]).astype(np.int32), np.arange(A_mat.shape[1]).astype(np.int32), A_mat)
-                A.assemble()
+                # A_mat=sp.io.mmread(data_dir+"/"+os.listdir(data_dir)[0]).toarray()
+                # # if mat_type=="hilbert":
+                # #     # A_numpy =np.array(sp.linalg.hilbert(n) , dtype=np.int32)+0j
+                # #     A_numpy =sp.linalg.hilbert(n).astype(np.float64)
+                # A = PETSc.Mat().create()
+                # # A_mat.shape[0]
+                # A.setSizes([A_mat.shape[0], A_mat.shape[1]])
+                # # A.setType("aij")
+                # A.setUp()
+                # # print(A_mat.shape[0])
+                #
+                # # First arg is list of row indices, second list of column indices
+                # # A.setValues([1, 2, 3], [0, 5, 9], np.ones((3, 3)))
+                # # A.setValues(np.arange(n), np.arange(n), A_numpy)
+                # A.setValues(np.arange(A_mat.shape[0]).astype(np.int32), np.arange(A_mat.shape[1]).astype(np.int32), A_mat)
+                # A.assemble()
                 # print(sp.linalg.hilbert(n))
+
+
+                # A_mat=sp.io.mmread(data_dir+"/"+os.listdir(data_dir)[0])
+                # from io import BytesIO
+                # target = BytesIO()
+                # sp.io.mmwrite(target, A_mat)
+                #
+                # target.write(matrix_filename.encode('utf-8'))
+                # target.close()
+                #
+                # A = PETSc.Mat().create()
+                # viewer_A = PETSc.Viewer().createBinary(matrix_filename, mode=PETSc.Viewer.Mode.READ, comm=A.getComm())
+                # A = PETSc.Mat().load(viewer_A)
+
+                # viewer_A = PETSc.Viewer().createBinary(matrix_filename, mode=PETSc.Viewer.Mode.WRITE, comm=A.getComm())
+                # viewer_A(A)
+
+                A_mat = sp.io.mmread(data_dir + "/" + os.listdir(data_dir)[0]).tocsr()
+                A = PETSc.Mat().create()
+                A.setSizes([A_mat.shape[0], A_mat.shape[1]])
+                A.setUp()
+                A.setValuesCSR(A_mat.indptr.astype(np.int32), A_mat.indices.astype(np.int32),
+                               A_mat.data.astype(np.int32))
+                A.assemble()
 
                 viewer_A = PETSc.Viewer().createBinary(matrix_filename, mode=PETSc.Viewer.Mode.WRITE, comm=A.getComm())
                 viewer_A(A)
