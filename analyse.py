@@ -15,9 +15,12 @@ from PIL.ImageColor import colormap
 from constants import *
 COLORS=list(matplotlib.colors.XKCD_COLORS)
 
+REMOVE_SET=set()
 def get_results():
     results=[]
     filenames = os.listdir(RESULTS_DIRECTORY)
+    # II = 0
+
     for filename in filenames:
         file_path=RESULTS_DIRECTORY + "/" + filename
         if os.path.getsize(file_path) != 0:
@@ -29,6 +32,12 @@ def get_results():
 
                 # if 'n' in line:            # it get `n` in any place - ie. 'small n'
                 if line.startswith('EXCEEDED TIMEOUT LIMIT'):
+
+                    met,prec=filename.split("_mat_")[0].split("met")[1].split("_pc")
+                    # print(met.lower()+" with "+prec.lower())
+                    # print(met+"with"+prec,II)
+                    # II+=1
+                    REMOVE_SET.add(met.lower()+" with "+prec.lower())
                     convergence=False
                 elif line.startswith('n='):  # it get only "n" (with `" "`) at the beginning of line
                     parts = line.split('=')
@@ -354,6 +363,7 @@ def filter_methods_by_time(result,time_threshold=-1):
             for el in result[item]:
                 if el["time"] > time_threshold:
                     remove_set.add(el["name"])
+
                 # else:
                     # if el['name'] not in number_of_method_success:
                     #     number_of_method_success[el['name']]=0
@@ -362,11 +372,13 @@ def filter_methods_by_time(result,time_threshold=-1):
         # print()
         # print()
 
+        # print(REMOVE_SET)
+        # print(remove_set)
         new_result={}
         for item in result:
             new_result[item] = []
             for el in result[item]:
-                if el["name"] not in remove_set:
+                if (el["name"] not in remove_set) and (el["name"] not in REMOVE_SET):
                     new_result[item].append(el)
                 # if (el["name"] not in remove_set) and el['name'] in number_of_method_success:
                 #     if number_of_method_success[el['name']] == len(result):
@@ -426,6 +438,7 @@ def main():
 
 
         # CONSIDERING TIME
+
         filtered_time_sorted_result=filter_methods_by_time(sorted_result,time_threshold=TIME_THRESHOLD)
         subdirectory = f"best_{prop}_relative_res_thr_{RELATIVE_RESIDUAL_THRESHOLD}_time_thr_{TIME_THRESHOLD}"
         print_sorted(filtered_time_sorted_result, prop, subname=f"best_relative_res_threshold_{RELATIVE_RESIDUAL_THRESHOLD}_time_thr_{TIME_THRESHOLD}")

@@ -210,8 +210,10 @@ def run_test(n, seed, parameters, mat_test_type):
                 A = PETSc.Mat().create()
                 A.setSizes([A_mat.shape[0], A_mat.shape[1]])
                 A.setUp()
+                # A.setValuesCSR(A_mat.indptr.astype(np.int32), A_mat.indices.astype(np.int32),
+                #                A_mat.data.astype(np.int32))
                 A.setValuesCSR(A_mat.indptr.astype(np.int32), A_mat.indices.astype(np.int32),
-                               A_mat.data.astype(np.int32))
+                               A_mat.data)
                 A.assemble()
 
                 viewer_A = PETSc.Viewer().createBinary(matrix_filename, mode=PETSc.Viewer.Mode.WRITE, comm=A.getComm())
@@ -385,6 +387,7 @@ def run_test(n, seed, parameters, mat_test_type):
                 directory_to_save = ANALYSE_DIRECTORY + "/" + param["mat_name"] + "_matrix/"
                 filename_to_save_plot = directory_to_save + name + f"_matrix_n_{n}"
                 if not os.path.isfile(filename_to_save_plot):
+                    # plot_portrait_matrix(A=A, n=n, mat_test_type=param["mat_name"], norm="LogNorm")
                     plot_portrait_matrix(A=A, n=n, mat_test_type=param["mat_name"], norm="LogNorm")
                 # PETSc.MatView(A)
                 # PETSc.Viewer.createDraw(A)
